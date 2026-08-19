@@ -496,6 +496,7 @@ async function loadState(){ return normalize(readLocal()); }
 
 function persist(){
   state.updated = Date.now();
+  dirty = true;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{ writeLocal(); queueSync(); }, 300);
 }
@@ -568,6 +569,7 @@ function importBackup(file){
 const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
 const FNAME = 'daily-card.json';
 let token = null, tokenExp = 0, syncing = false, syncTimer = null;
+let dirty = false, lastError = '';
 
 const cfg = () => state.settings;
 const provider = () => cfg().provider || 'none';
@@ -674,7 +676,7 @@ function ghHead(extra){
 function ghErr(r){
   if(r.status === 401) return new Error('GitHub rejected that token. Check it was copied whole and hasn\u2019t expired.');
   if(r.status === 403) return new Error('GitHub refused — the token is missing the gist permission.');
-  if(r.status === 404) return new Error('That gist no longer exists. Tap Disconnect, then Connect again.');
+  if(r.status === 404){ state.settings.gistId = ''; return new Error('The gist was missing — it will be recreated on the next sync.'); }
   return new Error('GitHub said no (' + r.status + ').');
 }
 async function ghFindId(){
@@ -723,9 +725,15 @@ async function drivePush(doc, interactive){
   await drivePut(t, id, doc);
 }
 
+/* Only a credential problem should disconnect. A flat tunnel, a dead wifi
+   hotspot or a backgrounded phone must never silently switch sync off. */
+function isAuthFailure(msg){
+  return /rejected that token|missing the gist permission|sign-in|client ID|401|403/i.test(msg || '');
+}
+
 async function sync(interactive){
   const p = provider();
-  if(syncing || p === 'none') return;
+  if(syncing || p === 'none' || !hasCreds()) return;
   syncing = true;
   if(tab === 'data') render();
   try{
@@ -735,20 +743,31 @@ async function sync(interactive){
     state.settings.lastSync = Date.now();
     const outgoing = Object.assign({}, state, {settings: undefined});
     if(p === 'gist') await ghPush(outgoing); else await drivePush(outgoing, interactive);
+    dirty = false; lastError = '';
     writeLocal();
     syncing = false; render();
     if(interactive) toast('Synced.');
   }catch(e){
     syncing = false;
-    state.settings.linked = false;
-    if(interactive){ toast(e.message || 'Sync failed.'); render(); }
+    lastError = e.message || 'Sync failed.';
+    if(isAuthFailure(lastError)) state.settings.linked = false;
+    writeLocal();
+    if(interactive){ toast(lastError); render(); }
     else if(tab === 'data') render();
   }
 }
-function queueSync(){
-  if(!connected() || !cfg().auto) return;
+
+/* Push straight away rather than waiting out the debounce — used when the
+   app is about to be backgrounded or closed, which on a phone is constantly. */
+function flushSync(){
+  if(!dirty || !hasCreds() || !cfg().auto || syncing) return;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(()=>sync(false), 6000);
+  sync(false);
+}
+function queueSync(){
+  if(!hasCreds() || !cfg().auto) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>sync(false), 2500);
 }
 function disconnect(){
   state.settings.linked = false;
@@ -1213,8 +1232,10 @@ function renderData(){
 
   let statusCls = 'status', statusTxt;
   if(syncing){ statusTxt = 'Syncing…'; }
+  else if(lastError){ statusCls += ' warn'; statusTxt = lastError; }
+  else if(connected() && dirty){ statusCls += ' live'; statusTxt = 'Changes waiting to go up'; }
   else if(connected()){ statusCls += ' live'; statusTxt = last ? 'Last synced ' + last.toLocaleString() : 'Connected'; }
-  else if(hasCreds()){ statusCls += ' warn'; statusTxt = 'Not connected'; }
+  else if(hasCreds()){ statusCls += ' warn'; statusTxt = 'Not connected yet — tap Connect'; }
   else { statusTxt = 'Sync is off — this device only'; }
 
   const p = provider();
@@ -1264,7 +1285,12 @@ function renderData(){
     + '<button data-act="prov" data-p="gist" aria-pressed="' + (p==='gist') + '">GitHub</button>'
     + '<button data-act="prov" data-p="drive" aria-pressed="' + (p==='drive') + '">Drive</button></div>'
     + body
-    + '<div class="' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div></div>'
+    + '<div class="' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div>'
+    + (p !== 'none' ? '<p style="margin:10px 0 0;font-size:12px;color:var(--ink-3)">'
+        + 'This device last pushed ' + (s.lastSync ? new Date(s.lastSync).toLocaleString() : 'never')
+        + (s.gistId ? ' \u00B7 gist ' + esc(String(s.gistId).slice(0,8)) + '\u2026' : ' \u00B7 no gist yet')
+        + '</p>' : '')
+    + '</div>'
 
     + '<div class="panel"><h4>If two devices disagree</h4>'
     + '<p>Nothing is thrown away. Days and notes from both devices are combined, and whichever device saved most recently wins any direct clash on the same entry. Your habit list comes from the most recently edited device.</p></div>';
@@ -1512,13 +1538,17 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && !edit
   if('serviceWorker' in navigator){
     window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   }
-  if(connected()) sync(false);
+  if(hasCreds()) sync(false);
 
   let awayAt = Date.now();
   document.addEventListener('visibilitychange', ()=>{
-    if(document.hidden){ awayAt = Date.now(); return; }
-    if(connected() && Date.now() - awayAt > 60000) sync(false);
+    if(document.hidden){ awayAt = Date.now(); flushSync(); return; }
+    if(!hasCreds()) return;
+    if(dirty || Date.now() - awayAt > 45000) sync(false);
   });
+  window.addEventListener('pagehide', flushSync);
+  window.addEventListener('blur', flushSync);
+  window.addEventListener('online', ()=>{ if(hasCreds()) sync(false); });
 })();
 </script>
 </body>
