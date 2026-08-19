@@ -443,11 +443,39 @@ let saveTimer = null;
 function uid(){ return 'h' + Math.random().toString(36).slice(2,9); }
 
 function starter(){
+  const ALL = [0,1,2,3,4,5,6];
   return {habits:[
-    {id:uid(), name:'Move for 20 minutes', emoji:'🏃', ink:INKS[0], days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
-    {id:uid(), name:'Read before bed', emoji:'📖', ink:INKS[2], days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
-    {id:uid(), name:'Steps', emoji:'👟', ink:INKS[4], days:[0,1,2,3,4,5,6], type:'number', unit:'steps', goal:8000, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Lights out by 11', emoji:'🌙', ink:INKS[5], days:[1,2,3,4,5], type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false}
+    {id:uid(), name:'Socialized', emoji:'🤝', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Good attitude', emoji:'🙂', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Focused/disciplined', emoji:'🎯', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Frugal', emoji:'💰', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Extra career', emoji:'💼', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Groomed', emoji:'🪒', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Cleaned appt', emoji:'🧹', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Speak up at work', emoji:'🗣️', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Journaled', emoji:'📓', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Completed todo', emoji:'✅', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Read', emoji:'📖', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Practiced voice', emoji:'🎤', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Morning stretch', emoji:'🌄', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Meditate', emoji:'🧘', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Vitamins', emoji:'💊', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Flossed', emoji:'🦷', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Drinks', emoji:'🍷', ink:INKS[4], days:ALL, type:'number', unit:'drinks', goal:null, goalDir:'max', slot:'evening', archived:false},
+    {id:uid(), name:'Coffees', emoji:'☕', ink:INKS[5], days:ALL, type:'number', unit:'coffees', goal:null, goalDir:'max', slot:'day', archived:false},
+    {id:uid(), name:'No brainrot', emoji:'📵', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'M', emoji:'⭐', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Cardio', emoji:'🏃', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Lift', emoji:'🏋️', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Toe rehab', emoji:'🦶', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Leg rehab', emoji:'🦵', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Abs', emoji:'🔥', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Stretch', emoji:'🤸', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Sleep', emoji:'😴', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'No junk food', emoji:'🥗', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Bed hungry', emoji:'🍽️', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Went to bed at 1130', emoji:'🛏️', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Weight', emoji:'⚖️', ink:INKS[0], days:ALL, type:'number', unit:'lbs', goal:null, goalDir:'min', slot:'morning', archived:false}
   ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0}, updated:Date.now()};
 }
 

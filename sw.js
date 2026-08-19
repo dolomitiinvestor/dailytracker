@@ -1,5 +1,5 @@
 /* Daily Card service worker — offline shell only. Your data never passes through here. */
-const V = 'daily-card-v5';
+const V = 'daily-card-v6';
 const CORE = ['./', './index.html', './manifest.webmanifest',
               './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
 
