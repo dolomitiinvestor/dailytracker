@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OAuth Check — Daily Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#161A19; --stock:#D8D4C3; --stock-2:#E5E2D4;
+  --ink:#1C211F; --ink-2:#4B534E; --ink-3:#7C837D;
+  --rule:rgba(28,33,31,.16); --rule-2:rgba(28,33,31,.30);
+  --mimeo:#4A3D8F; --good:#2E7D4F; --bad:#A6322F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--desk);
+  background-image:radial-gradient(circle at 20% 0%, rgba(74,61,143,.18), transparent 55%);
+  color:var(--ink);font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  padding:26px 16px 60px;display:flex;justify-content:center;min-height:100vh;
+}
+button,input{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--mimeo);outline-offset:2px}
+.shell{width:100%;max-width:620px}
+.card{
+  position:relative;background:var(--stock);
+  background-image:linear-gradient(178deg,var(--stock-2),var(--stock) 40%);
+  border-radius:3px;box-shadow:0 18px 44px rgba(0,0,0,.45), 0 2px 0 rgba(255,255,255,.22) inset;
+  padding:0 0 24px;overflow:hidden;
+}
+.card::before,.card::after{
+  content:'';position:absolute;left:0;right:0;height:9px;pointer-events:none;z-index:3;
+  background-image:radial-gradient(circle at 7px 0, var(--desk) 3.6px, transparent 4.1px);
+  background-size:14px 9px;
+}
+.card::before{top:0}
+.card::after{bottom:0;transform:rotate(180deg)}
+.mast{padding:26px 22px 18px;border-bottom:1px solid var(--rule-2)}
+.mast .serial{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3)}
+.mast h1{font-size:clamp(28px,7.5vw,40px);font-weight:800;letter-spacing:-.035em;line-height:.95;margin:10px 0 6px}
+.mast p{font-size:13.5px;line-height:1.6;color:var(--ink-2)}
+.view{padding:20px 22px 0}
+.lab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+     color:var(--ink-3);margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+.lab:first-child{margin-top:0}
+.lab::after{content:'';flex:1;height:1px;background:var(--rule)}
+p.t{font-size:13.5px;line-height:1.65;color:var(--ink-2);margin-bottom:12px}
+.mono{font-family:'DM Mono',monospace;font-size:12px;background:rgba(28,33,31,.08);
+      border:1px solid var(--rule);border-radius:2px;padding:11px;word-break:break-all;line-height:1.5}
+.mono.empty{color:var(--ink-3);font-style:italic}
+.er{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+     padding:11px 14px;border-radius:2px;border:1px solid var(--rule-2);color:var(--ink-2)}
+.btn:hover{color:var(--ink);border-color:var(--ink-2)}
+.btn.solid{background:var(--ink);color:var(--stock);border-color:var(--ink)}
+.btn.solid:hover{background:var(--mimeo);border-color:var(--mimeo)}
+.txt{flex:1;min-width:200px;background:rgba(255,255,255,.65);border:1px solid var(--rule-2);
+     border-radius:2px;padding:11px;font-family:'DM Mono',monospace;font-size:12px}
+.txt:focus{outline:0;border-color:var(--mimeo)}
+.flags{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.flag{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.5;color:var(--ink-2)}
+.flag .m{font-family:'DM Mono',monospace;font-size:11px;flex:none;width:14px;text-align:center;font-weight:500}
+.flag.ok .m{color:var(--good)}
+.flag.no .m{color:var(--bad)}
+.flag.no{color:var(--ink)}
+.key{border-left:2px solid var(--rule-2);padding:2px 0 2px 14px;margin-bottom:16px}
+.key.good{border-left-color:var(--good)}
+.key.bad{border-left-color:var(--bad)}
+.key h5{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;font-weight:500;margin-bottom:5px}
+.key p{font-size:13px;line-height:1.6;color:var(--ink-2)}
+.key b{color:var(--ink)}
+code{font-family:'DM Mono',monospace;font-size:12px;background:rgba(28,33,31,.07);padding:1px 5px;border-radius:2px}
+.foot{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+      color:rgba(216,212,195,.34);text-align:center;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9;background:var(--ink);
+       color:var(--stock);padding:11px 16px;border-radius:2px;font-family:'DM Mono',monospace;
+       font-size:11px;letter-spacing:.08em;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+@media (max-width:430px){.view{padding:18px 16px 0}.mast{padding:24px 16px 16px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="card">
+  <header class="mast">
+    <div class="serial">Daily Card · Diagnostic</div>
+    <h1>OAuth Check</h1>
+    <p>Works out whether your Google client actually exists, separately from the habit tracker. Put this file next to <code>index.html</code> and open it on your site — not from your computer, or the origin won't match.</p>
+  </header>
+
+  <div class="view">
+    <div class="lab">What the app is sending</div>
+    <p class="t">This is the exact client ID stored in this browser — the literal string handed to Google, stray characters and all.</p>
+    <div class="mono" id="storedBox">reading…</div>
+    <div class="flags" id="flags"></div>
+    <div class="er">
+      <input class="txt" id="fixId" placeholder="Paste a replacement client ID" spellcheck="false" aria-label="Replacement client ID">
+      <button class="btn" data-act="fix">Overwrite</button>
+    </div>
+
+    <div class="lab">Your origin</div>
+    <p class="t">This exact string is what belongs under <b>Authorized JavaScript origins</b> on the client. Scheme and host only — no path, no trailing slash.</p>
+    <div class="mono" id="originBox"></div>
+    <div class="er"><button class="btn" data-act="copyOrigin">Copy origin</button></div>
+
+    <div class="lab">Does the client exist?</div>
+    <p class="t">This sends your ID straight to Google's sign-in endpoint, bypassing the app entirely. You're not trying to complete sign-in — you're reading which error comes back, because the two possible errors mean completely different things.</p>
+    <div class="er"><button class="btn solid" data-act="test">Run the test</button></div>
+
+    <div class="lab">Reading the result</div>
+
+    <div class="key bad">
+      <h5>"The OAuth client was not found" · 401 invalid_client</h5>
+      <p>The client <b>does not exist</b> in Google's records. Not an origin problem, not a consent problem. Either it was never created, it was deleted, or it lives in a project you're not looking at. Go to <b>APIs &amp; Services → Credentials</b> and check the <b>OAuth 2.0 Client IDs</b> section specifically — in the newer console this sits under <b>Google Auth Platform → Clients</b>. Seeing your project, your consent screen, or your enabled APIs tells you nothing about whether a client exists; they're separate objects. If the list is empty, create one: <b>Create credentials → OAuth client ID → Web application</b>.</p>
+    </div>
+
+    <div class="key good">
+      <h5>"Error 400: redirect_uri_mismatch"</h5>
+      <p>Good news, despite looking like a failure. Google found the client and moved on to its <i>next</i> check — so <b>your ID is correct</b>. This test doesn't register a redirect URI, so this error is the expected pass. Your problem is elsewhere: most likely your origin isn't listed on the client, or the app is running an old cached copy of itself.</p>
+    </div>
+
+    <div class="key good">
+      <h5>A Google account picker, or "this app isn't verified"</h5>
+      <p>Everything is registered correctly. The unverified warning is normal for a personal project in Testing mode — continue past it. Back out of this screen without approving; you don't need to finish here.</p>
+    </div>
+
+    <div class="key">
+      <h5>"Error 403: access_denied"</h5>
+      <p>The client is fine, but your Google account isn't on the list. Add yourself under <b>Test users</b> on the consent screen.</p>
+    </div>
+
+    <div class="lab">If the ID checks out but the app still fails</div>
+    <p class="t">Then the app is running an old copy of itself. The service worker serves from cache until its version string changes. Open <code>sw.js</code> in your repo, change <code>daily-card-v1</code> to <code>daily-card-v2</code>, commit, wait for the green tick on Actions, then delete the home screen shortcut and load the site fresh in Safari.</p>
+  </div>
+</div>
+<p class="foot">Punch one hole a day · Keep the card unbroken</p>
+</div>
+
+<script>
+const KEY = 'daily-card-v1';
+const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const ID_RE = /^\d{6,}-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
+const $ = id => document.getElementById(id);
+
+function readState(){
+  try{ return JSON.parse(localStorage.getItem(KEY) || 'null'); }
+  catch(e){ return null; }
+}
+function storedId(){
+  const s = readState();
+  return (s && s.settings && s.settings.clientId) ? s.settings.clientId : '';
+}
+
+/* Render the raw string with invisible characters made visible. */
+function reveal(s){
+  return s.replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
+          .replace(/ /g, '<span style="background:rgba(166,50,47,.28);padding:0 2px">␠</span>')
+          .replace(/[\u200B-\u200D\uFEFF]/g, '<span style="background:rgba(166,50,47,.28);padding:0 2px">·</span>');
+}
+
+function check(id){
+  const out = [];
+  const add = (ok,msg)=> out.push({ok,msg});
+  if(!id){ return [{ok:false,msg:'Nothing is stored yet — the app has never been given a client ID on this device.'}]; }
+
+  add(!/^https?:\/\//i.test(id), /^https?:\/\//i.test(id)
+    ? 'Starts with http:// or https:// — a client ID is not a web address.'
+    : 'No URL prefix.');
+  add(!/\/$/.test(id), /\/$/.test(id) ? 'Ends with a slash.' : 'No trailing slash.');
+  add(!/\s/.test(id), /\s/.test(id) ? 'Contains a space.' : 'No spaces.');
+  add(/\.apps\.googleusercontent\.com$/.test(id), /\.apps\.googleusercontent\.com$/.test(id)
+    ? 'Ends in .apps.googleusercontent.com.'
+    : 'Does not end in .apps.googleusercontent.com.');
+  add(ID_RE.test(id), ID_RE.test(id)
+    ? 'Overall shape is valid (' + id.length + ' characters).'
+    : 'Overall shape is wrong (' + id.length + ' characters).');
+  return out;
+}
+
+function paint(){
+  const id = storedId();
+  const box = $('storedBox');
+  box.className = 'mono' + (id ? '' : ' empty');
+  box.innerHTML = id ? reveal(id) : 'nothing stored on this device';
+  $('flags').innerHTML = check(id).map(f=>
+    '<div class="flag ' + (f.ok ? 'ok' : 'no') + '"><span class="m">' + (f.ok ? '✓' : '✕') + '</span><span>'
+    + f.msg + '</span></div>').join('');
+  $('originBox').textContent = location.origin;
+}
+
+function testUrl(id){
+  return 'https://accounts.google.com/o/oauth2/v2/auth'
+    + '?client_id=' + encodeURIComponent(id)
+    + '&redirect_uri=' + encodeURIComponent(location.origin)
+    + '&response_type=token'
+    + '&scope=' + encodeURIComponent(SCOPE);
+}
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+
+  if(b.dataset.act === 'test'){
+    const id = storedId() || $('fixId').value.trim();
+    if(!id) return toast('No client ID to test — paste one above first.');
+    window.open(testUrl(id), '_blank', 'noopener');
+    return;
+  }
+  if(b.dataset.act === 'copyOrigin'){
+    const o = location.origin;
+    if(navigator.clipboard) navigator.clipboard.writeText(o).then(()=>toast('Copied ' + o), ()=>toast(o));
+    else toast(o);
+    return;
+  }
+  if(b.dataset.act === 'fix'){
+    const raw = $('fixId').value;
+    const m = raw.replace(/[\u200B-\u200D\uFEFF"'<>\s]/g,'')
+                 .match(/\d{6,}-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com/);
+    if(!m) return toast('That isn\u2019t a recognisable client ID.');
+    const s = readState();
+    if(!s || !s.settings) return toast('No saved card found here — open the app once first.');
+    s.settings.clientId = m[0];
+    s.settings.linked = false;
+    s.updated = Date.now();
+    try{ localStorage.setItem(KEY, JSON.stringify(s)); }
+    catch(err){ return toast('This browser is blocking storage.'); }
+    $('fixId').value = '';
+    paint();
+    toast('Stored. Now run the test.');
+    return;
+  }
+});
+
+let tT = null;
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const el = document.createElement('div');
+  el.className = 'toast'; el.setAttribute('role','status'); el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(tT); tT = setTimeout(()=>el.remove(), 3200);
+}
+
+paint();
+</script>
+</body>
+</html>

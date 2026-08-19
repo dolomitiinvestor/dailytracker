@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Icon Maker — Daily Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --desk:#161A19; --stock:#D8D4C3; --stock-2:#E5E2D4;
+  --ink:#1C211F; --ink-2:#4B534E; --ink-3:#7C837D;
+  --rule:rgba(28,33,31,.16); --rule-2:rgba(28,33,31,.30);
+  --mimeo:#4A3D8F;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--desk);
+  background-image:radial-gradient(circle at 20% 0%, rgba(74,61,143,.18), transparent 55%);
+  color:var(--ink);font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  padding:26px 16px 60px;display:flex;justify-content:center;min-height:100vh;
+}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--mimeo);outline-offset:2px}
+.shell{width:100%;max-width:620px}
+.card{
+  position:relative;background:var(--stock);
+  background-image:linear-gradient(178deg,var(--stock-2),var(--stock) 40%);
+  border-radius:3px;box-shadow:0 18px 44px rgba(0,0,0,.45), 0 2px 0 rgba(255,255,255,.22) inset;
+  padding:0 0 22px;overflow:hidden;
+}
+.card::before,.card::after{
+  content:'';position:absolute;left:0;right:0;height:9px;pointer-events:none;z-index:3;
+  background-image:radial-gradient(circle at 7px 0, var(--desk) 3.6px, transparent 4.1px);
+  background-size:14px 9px;
+}
+.card::before{top:0}
+.card::after{bottom:0;transform:rotate(180deg)}
+.mast{padding:26px 22px 18px;border-bottom:1px solid var(--rule-2)}
+.mast .serial{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3)}
+.mast h1{font-size:clamp(28px,7.5vw,40px);font-weight:800;letter-spacing:-.035em;line-height:.95;margin:10px 0 6px}
+.mast p{font-size:13.5px;line-height:1.6;color:var(--ink-2)}
+.view{padding:20px 22px 0}
+.lab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+     color:var(--ink-3);margin:24px 0 10px;display:flex;align-items:center;gap:10px}
+.lab:first-child{margin-top:0}
+.lab::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+.stage{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.previews{display:flex;gap:14px;align-items:flex-end}
+.pv{text-align:center}
+.pv canvas{display:block;background:#000;cursor:grab;touch-action:none}
+.pv canvas:active{cursor:grabbing}
+#pvFull{width:168px;height:168px;border-radius:3px}
+#pvHome{width:74px;height:74px;border-radius:17px}
+.pv span{display:block;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;
+         text-transform:uppercase;color:var(--ink-3);margin-top:7px}
+.hint{flex:1;min-width:170px;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
+
+.seg{display:flex;border:1px solid var(--rule-2);border-radius:2px;overflow:hidden;width:fit-content}
+.seg button{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+            text-transform:uppercase;padding:8px 14px;color:var(--ink-3)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--stock)}
+
+.field-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.txt{flex:1;min-width:150px;background:rgba(255,255,255,.6);border:1px solid var(--rule-2);
+     border-radius:2px;padding:11px;font-size:15px}
+.txt:focus{outline:0;border-color:var(--mimeo)}
+.btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+     padding:11px 14px;border-radius:2px;border:1px solid var(--rule-2);color:var(--ink-2)}
+.btn:hover{color:var(--ink);border-color:var(--ink-2)}
+.btn.solid{background:var(--ink);color:var(--stock);border-color:var(--ink)}
+.btn.solid:hover{background:var(--mimeo);border-color:var(--mimeo)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+.slider{display:flex;align-items:center;gap:12px;margin-top:14px}
+.slider label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;
+              text-transform:uppercase;color:var(--ink-3);width:64px;flex:none}
+.slider input{flex:1;accent-color:var(--mimeo)}
+.slider output{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-2);width:44px;text-align:right}
+
+.swatches{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0}
+.sw[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--stock) inset}
+.sw.custom{position:relative;overflow:hidden;border:1px dashed var(--rule-2)}
+.sw.custom input{position:absolute;inset:-8px;width:150%;height:150%;border:0;padding:0;cursor:pointer}
+
+.drop{border:1.5px dashed var(--rule-2);border-radius:3px;padding:22px;text-align:center;
+      font-family:'DM Mono',monospace;font-size:11.5px;letter-spacing:.06em;color:var(--ink-3);
+      line-height:1.7;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--mimeo);background:rgba(74,61,143,.07);color:var(--ink)}
+
+.files{display:flex;flex-direction:column;gap:1px;margin-top:4px}
+.file{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dotted var(--rule-2)}
+.file:last-child{border-bottom:0}
+.file .nm{flex:1;min-width:0}
+.file .nm b{display:block;font-family:'DM Mono',monospace;font-size:12.5px;font-weight:500;word-break:break-all}
+.file .nm i{display:block;font-style:normal;font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.4}
+.file .btn{flex:none}
+.allrow{margin-top:16px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+.steps{counter-reset:s;margin-top:4px}
+.steps li{list-style:none;counter-increment:s;position:relative;padding:0 0 14px 30px;
+          font-size:13.5px;line-height:1.6;color:var(--ink-2)}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:20px;height:20px;
+  border-radius:50%;background:var(--ink);color:var(--stock);font-family:'DM Mono',monospace;
+  font-size:10px;display:grid;place-items:center}
+.steps li b{color:var(--ink);font-weight:600}
+code{font-family:'DM Mono',monospace;font-size:12.5px;background:rgba(28,33,31,.07);padding:1px 5px;border-radius:2px}
+.warn{border-left:2px solid var(--mimeo);padding:2px 0 2px 13px;margin-top:14px;font-size:13px;line-height:1.6;color:var(--ink-2)}
+.foot{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+      color:rgba(216,212,195,.34);text-align:center;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9;background:var(--ink);
+       color:var(--stock);padding:11px 16px;border-radius:2px;font-family:'DM Mono',monospace;
+       font-size:11px;letter-spacing:.08em;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+@media (max-width:430px){
+  .view{padding:18px 16px 0}.mast{padding:24px 16px 16px}
+  #pvFull{width:130px;height:130px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="card">
+  <header class="mast">
+    <div class="serial">Daily Card · Utility</div>
+    <h1>Icon Maker</h1>
+    <p>Drop in any image — or just an emoji — and get the four icon files your app needs, at the exact sizes and filenames iOS and Android look for.</p>
+  </header>
+
+  <div class="view">
+    <div class="lab">Preview</div>
+    <div class="stage">
+      <div class="previews">
+        <div class="pv"><canvas id="pvFull" width="360" height="360"></canvas><span>Icon file</span></div>
+        <div class="pv"><canvas id="pvHome" width="360" height="360"></canvas><span>On iPhone</span></div>
+      </div>
+      <p class="hint">Drag the big square to reposition your image. iOS rounds the corners itself, so the exported file is a full square — don't round it yourself.</p>
+    </div>
+
+    <div class="lab">Source</div>
+    <div class="seg" role="group">
+      <button data-mode="image" aria-pressed="true">Image</button>
+      <button data-mode="emoji" aria-pressed="false">Emoji</button>
+      <button data-mode="text" aria-pressed="false">Letters</button>
+    </div>
+
+    <div id="srcImage">
+      <div class="drop" id="drop">
+        Drop a PNG or JPG here<br>or <button class="btn" id="pick" style="margin-top:8px">Choose a file</button>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+    </div>
+
+    <div id="srcEmoji" hidden>
+      <div class="field-row">
+        <input class="txt" id="emojiIn" maxlength="4" placeholder="🏃" aria-label="Emoji">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-3)">One emoji works best</span>
+      </div>
+    </div>
+
+    <div id="srcText" hidden>
+      <div class="field-row">
+        <input class="txt" id="textIn" maxlength="3" placeholder="DC" aria-label="Letters">
+        <button class="sw custom" style="width:38px;height:38px;border-radius:2px" aria-label="Letter colour">
+          <input type="color" id="fgColor" value="#D8D4C3">
+        </button>
+      </div>
+    </div>
+
+    <div class="slider"><label for="zoom">Size</label>
+      <input type="range" id="zoom" min="30" max="220" value="100"><output id="zoomOut">100%</output></div>
+    <div class="slider"><label for="pad">Margin</label>
+      <input type="range" id="pad" min="0" max="30" value="0"><output id="padOut">0%</output></div>
+
+    <div class="lab">Background</div>
+    <div class="swatches" id="swatches"></div>
+
+    <div class="lab">Download</div>
+    <div class="files" id="files"></div>
+    <div class="allrow">
+      <button class="btn solid" id="all">Download all four</button>
+      <button class="btn" id="reset">Start over</button>
+    </div>
+    <p class="warn">Safari on iPhone will only save these one at a time, and puts them in Files. Doing this on a computer is far less fiddly.</p>
+
+    <div class="lab">Then</div>
+    <ol class="steps">
+      <li>Put all four files in your repo <b>next to <code>index.html</code></b>, replacing the existing ones. Keep the filenames exactly as they are.</li>
+      <li>Wait for the green tick on the <b>Actions</b> tab, then load your site in Safari and hard-refresh.</li>
+      <li><b>Delete the existing icon from your home screen</b> and add it again from the Share menu. This step is the one people miss — iOS copies the icon when you add the shortcut and never checks again.</li>
+    </ol>
+    <p class="warn">If the icon still comes out as a tiny screenshot of the page, iOS isn't finding the file. Open <code>your-site-url/apple-touch-icon.png</code> directly in Safari — if that 404s, the file isn't where the page expects it.</p>
+  </div>
+</div>
+<p class="foot">Punch one hole a day · Keep the card unbroken</p>
+</div>
+
+<script>
+const BGS = ['#161A19','#4A3D8F','#A6322F','#17605C','#23407A','#9A5A16','#D8D4C3','#FFFFFF'];
+const OUT = [
+  {name:'apple-touch-icon.png', size:180, inset:0,    note:'iPhone and iPad home screen'},
+  {name:'icon-192.png',         size:192, inset:0,    note:'Android home screen, browser tab'},
+  {name:'icon-512.png',         size:512, inset:0,    note:'Splash screen, app listings'},
+  {name:'icon-maskable.png',    size:512, inset:0.14, note:'Android adaptive shapes — extra margin'}
+];
+
+const st = {mode:'image', img:null, emoji:'', text:'', bg:'#161A19', fg:'#D8D4C3',
+            zoom:1, pad:0, x:0, y:0};
+
+const $ = id => document.getElementById(id);
+const pvFull = $('pvFull'), pvHome = $('pvHome');
+
+/* ---------- drawing ---------- */
+function paint(ctx, S, extraInset){
+  const inset = Math.min(0.42, st.pad + (extraInset||0));
+  ctx.clearRect(0,0,S,S);
+  ctx.fillStyle = st.bg;
+  ctx.fillRect(0,0,S,S);
+
+  const box = S * (1 - inset*2);
+  const cx = S/2 + st.x*S, cy = S/2 + st.y*S;
+
+  if(st.mode === 'image' && st.img){
+    const iw = st.img.naturalWidth, ih = st.img.naturalHeight;
+    const cover = Math.max(box/iw, box/ih) * st.zoom;
+    const w = iw*cover, h = ih*cover;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(S*inset, S*inset, box, box);
+    ctx.clip();
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(st.img, cx - w/2, cy - h/2, w, h);
+    ctx.restore();
+    return;
+  }
+
+  const glyph = st.mode === 'emoji' ? st.emoji : st.text;
+  if(!glyph) return;
+  const base = st.mode === 'emoji' ? 0.74 : 0.52;
+  ctx.save();
+  ctx.fillStyle = st.mode === 'emoji' ? '#000' : st.fg;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const fs = box * base * st.zoom / Math.max(1, glyph.length * (st.mode==='emoji' ? 1 : 0.62));
+  ctx.font = (st.mode==='emoji' ? '' : '800 ') + fs
+    + 'px ' + (st.mode==='emoji'
+      ? '"Apple Color Emoji","Noto Color Emoji",system-ui'
+      : 'Archivo,system-ui,sans-serif');
+  if(st.mode !== 'emoji') ctx.letterSpacing = '-0.03em';
+  ctx.fillText(glyph, cx, cy + fs*0.03);
+  ctx.restore();
+}
+
+function refresh(){
+  [pvFull, pvHome].forEach(c=> paint(c.getContext('2d'), c.width, 0));
+  const ready = !!(st.img || st.emoji || st.text);
+  document.querySelectorAll('[data-dl], #all').forEach(b=> b.disabled = !ready);
+}
+
+/* ---------- export ---------- */
+function build(spec){
+  const c = document.createElement('canvas');
+  c.width = c.height = spec.size;
+  paint(c.getContext('2d'), spec.size, spec.inset);
+  return c;
+}
+function download(spec){
+  build(spec).toBlob(blob=>{
+    if(!blob) return toast('Could not build that file.');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = spec.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+  }, 'image/png');
+}
+
+/* ---------- ui ---------- */
+$('files').innerHTML = OUT.map((o,i)=>
+  '<div class="file"><span class="nm"><b>' + o.name + '</b><i>' + o.size + '×' + o.size + ' · ' + o.note + '</i></span>'
+  + '<button class="btn" data-dl="' + i + '">Save</button></div>').join('');
+
+$('swatches').innerHTML = BGS.map(c=>
+  '<button class="sw" style="background:' + c + '" data-bg="' + c + '" aria-pressed="' + (c===st.bg) + '" aria-label="Background ' + c + '"></button>').join('')
+  + '<button class="sw custom" aria-label="Custom background"><input type="color" id="bgColor" value="#161A19"></button>';
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+
+  if(b.dataset.mode){
+    st.mode = b.dataset.mode;
+    document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+    $('srcImage').hidden = st.mode !== 'image';
+    $('srcEmoji').hidden = st.mode !== 'emoji';
+    $('srcText').hidden  = st.mode !== 'text';
+    refresh(); return;
+  }
+  if(b.dataset.bg){
+    st.bg = b.dataset.bg;
+    document.querySelectorAll('[data-bg]').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+    refresh(); return;
+  }
+  if(b.dataset.dl !== undefined){ download(OUT[Number(b.dataset.dl)]); return; }
+  if(b.id === 'all'){
+    OUT.forEach((o,i)=> setTimeout(()=>download(o), i*350));
+    toast('Saving four files…'); return;
+  }
+  if(b.id === 'pick'){ $('file').click(); return; }
+  if(b.id === 'reset'){
+    Object.assign(st, {img:null, emoji:'', text:'', zoom:1, pad:0, x:0, y:0});
+    $('emojiIn').value = ''; $('textIn').value = '';
+    $('zoom').value = 100; $('pad').value = 0;
+    $('zoomOut').textContent = '100%'; $('padOut').textContent = '0%';
+    refresh(); return;
+  }
+});
+
+function loadFile(f){
+  if(!f || !f.type.startsWith('image/')) return toast('That needs to be an image file.');
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = ()=>{ st.img = img; st.x = st.y = 0; st.zoom = 1;
+    $('zoom').value = 100; $('zoomOut').textContent = '100%';
+    refresh(); toast('Loaded. Drag to reposition.'); };
+  img.onerror = ()=> toast('Could not read that image.');
+  img.src = url;
+}
+$('file').addEventListener('change', e=> e.target.files[0] && loadFile(e.target.files[0]));
+
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev, e=>{
+  e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=> drop.addEventListener(ev, e=>{
+  e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e=> e.dataTransfer.files[0] && loadFile(e.dataTransfer.files[0]));
+
+$('emojiIn').addEventListener('input', e=>{ st.emoji = e.target.value.trim(); refresh(); });
+$('textIn').addEventListener('input', e=>{ st.text = e.target.value.trim().toUpperCase(); refresh(); });
+$('zoom').addEventListener('input', e=>{
+  st.zoom = Number(e.target.value)/100; $('zoomOut').textContent = e.target.value + '%'; refresh(); });
+$('pad').addEventListener('input', e=>{
+  st.pad = Number(e.target.value)/100; $('padOut').textContent = e.target.value + '%'; refresh(); });
+document.addEventListener('input', e=>{
+  if(e.target.id === 'bgColor'){ st.bg = e.target.value;
+    document.querySelectorAll('[data-bg]').forEach(x=>x.setAttribute('aria-pressed','false')); refresh(); }
+  if(e.target.id === 'fgColor'){ st.fg = e.target.value; refresh(); }
+});
+
+/* drag to reposition */
+let dragging = false, last = null;
+function pt(e){ const t = e.touches ? e.touches[0] : e; return {x:t.clientX, y:t.clientY}; }
+pvFull.addEventListener('pointerdown', e=>{
+  dragging = true; last = pt(e); pvFull.setPointerCapture(e.pointerId); });
+pvFull.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  const p = pt(e), r = pvFull.getBoundingClientRect();
+  st.x += (p.x - last.x)/r.width;
+  st.y += (p.y - last.y)/r.height;
+  st.x = Math.max(-0.6, Math.min(0.6, st.x));
+  st.y = Math.max(-0.6, Math.min(0.6, st.y));
+  last = p; refresh();
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>
+  pvFull.addEventListener(ev, ()=> dragging = false));
+
+let tT = null;
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const el = document.createElement('div');
+  el.className = 'toast'; el.setAttribute('role','status'); el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(tT); tT = setTimeout(()=>el.remove(), 3000);
+}
+
+refresh();
+</script>
+</body>
+</html>
