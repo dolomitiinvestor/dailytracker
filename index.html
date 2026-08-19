@@ -11,7 +11,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Daily Card">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="167x167" href="./apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./apple-touch-icon.png">
 <link rel="icon" href="./icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,10 +92,11 @@ input[type=number]{-moz-appearance:textfield}
 .pip.on{border-color:transparent;background:var(--desk);box-shadow:inset 0 1px 2px rgba(0,0,0,.9)}
 
 /* ---------- tabs ---------- */
-.tabs{display:flex;gap:2px;padding:12px var(--pad) 0}
+.tabs{display:flex;gap:2px;padding:12px var(--pad) 0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
 .tab{
-  flex:1;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-  padding:9px 4px;color:var(--ink-3);border-bottom:2px solid transparent;text-align:center;
+  flex:1 0 auto;min-width:62px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  padding:9px 6px;color:var(--ink-3);border-bottom:2px solid transparent;text-align:center;white-space:nowrap;
 }
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--mimeo)}
 .tab:hover{color:var(--ink)}
@@ -194,6 +197,9 @@ input[type=number]{-moz-appearance:textfield}
 .cell{width:24px;height:24px;border-radius:50%;margin:0 auto;display:block;border:1.5px dashed var(--rule-2)}
 .cell.on{border:0;background:var(--desk);box-shadow:inset 0 2px 3px rgba(0,0,0,.9), 0 0 0 2px var(--hi)}
 .cell.lo{border-style:solid;border-color:var(--hi);background:color-mix(in srgb,var(--hi) 25%,transparent)}
+.cell.xx{border:1.5px solid rgba(166,50,47,.5);position:relative;background:rgba(166,50,47,.1)}
+.cell.xx::after{content:'\2715';position:absolute;inset:0;display:grid;place-items:center;
+  font-size:11px;color:#A6322F;line-height:1}
 .cell.na{border:0;position:relative;cursor:default}
 .cell.na::after{content:'';position:absolute;left:50%;top:50%;width:9px;height:1.5px;background:var(--rule);transform:translate(-50%,-50%)}
 .cell.fut{border-style:solid;border-color:var(--rule);cursor:default;opacity:.5}
@@ -260,6 +266,62 @@ input[type=number]{-moz-appearance:textfield}
 .status.warn .dot{background:#A6322F}
 .toggle{display:flex;align-items:center;gap:9px;margin-top:12px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--ink-2);cursor:pointer}
 .toggle input{width:16px;height:16px;accent-color:var(--mimeo)}
+.origin{font-family:'DM Mono',monospace;font-size:12px;background:rgba(28,33,31,.08);border:1px solid var(--rule);
+  border-radius:2px;padding:9px 10px;flex:1;min-width:160px;word-break:break-all;color:var(--ink)}
+
+/* ---------- time slots ---------- */
+.slot-head{display:flex;align-items:center;gap:10px;margin:22px 0 4px;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3)}
+.slot-head:first-child{margin-top:4px}
+.slot-head .ct{color:var(--ink-2)}
+.slot-head::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+/* ---------- pass / fail controls ---------- */
+.marks{display:flex;align-items:center;gap:8px;flex:none}
+.miss{width:34px;height:34px;flex:none;border-radius:50%;border:1.5px solid var(--rule-2);
+  color:var(--ink-3);font-size:15px;line-height:1;display:grid;place-items:center}
+.miss:hover{border-color:var(--bad);color:var(--bad)}
+.bad{--bad:#A6322F}
+
+/* ---------- settled ---------- */
+.settled{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dotted var(--rule-2)}
+.settled:last-child{border-bottom:0}
+.settled .mk{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--stock)}
+.settled .mk.y{background:var(--ink)}
+.settled .mk.n{background:#A6322F}
+.settled .nm{flex:1;min-width:0;font-size:14.5px;color:var(--ink-2);word-break:break-word}
+.settled .nm s{text-decoration-color:var(--ink-3);opacity:.7}
+.settled .val{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-3);flex:none}
+.undo{font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);border:1px solid var(--rule-2);border-radius:2px;padding:5px 8px;flex:none}
+.undo:hover{color:var(--ink);border-color:var(--ink-2)}
+
+/* ---------- history ---------- */
+.dayrow{border-bottom:1px dotted var(--rule-2);padding:14px 0}
+.dayrow:last-of-type{border-bottom:0}
+.dayrow .hd{display:flex;align-items:center;gap:12px;width:100%;text-align:left}
+.dayrow .dt{flex:1;min-width:0;font-weight:600;font-size:15px}
+.dayrow .dt small{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:400;margin-top:2px}
+.score{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink-2);flex:none;text-align:right}
+.score b{font-weight:500;color:var(--hi)}
+.bar{width:54px;height:5px;border-radius:3px;background:rgba(28,33,31,.13);overflow:hidden;flex:none}
+.bar i{display:block;height:100%;background:var(--mimeo)}
+.dayrow .nt{font-size:14.5px;line-height:1.55;color:var(--ink-2);margin-top:9px;white-space:pre-wrap;word-break:break-word}
+.dayrow .det{margin-top:11px;display:flex;flex-direction:column;gap:6px}
+.dayrow .det div{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-2)}
+.dayrow .det span{font-family:'DM Mono',monospace;font-size:11px;width:14px;flex:none;text-align:center}
+.dayrow .det .y{color:#2E7D4F}
+.dayrow .det .n{color:#A6322F}
+.dayrow .det .o{color:var(--ink-3)}
+.pen{font-family:'DM Mono',monospace;font-size:10px;color:var(--mimeo);flex:none}
+
+/* ---------- transfer ---------- */
+.xfer{width:100%;min-height:76px;background:rgba(255,255,255,.6);border:1px solid var(--rule-2);
+  border-radius:2px;padding:10px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.45;
+  resize:vertical;margin-top:10px;word-break:break-all}
+.xfer:focus{outline:0;border-color:var(--mimeo)}
 
 /* ---------- edit ---------- */
 .edit-item{border-bottom:1px dotted var(--rule-2);padding:16px 0}
@@ -348,6 +410,7 @@ select.mini{width:auto;font-size:11.5px;letter-spacing:.06em}
     <nav class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="today" aria-selected="true">Today</button>
       <button class="tab" role="tab" data-tab="week" aria-selected="false">Week</button>
+      <button class="tab" role="tab" data-tab="history" aria-selected="false">History</button>
       <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
       <button class="tab" role="tab" data-tab="edit" aria-selected="false">Habits</button>
       <button class="tab" role="tab" data-tab="data" aria-selected="false">Data</button>
@@ -365,11 +428,15 @@ const INKS = ['#4A3D8F','#A6322F','#17605C','#5C6B22','#23407A','#9A5A16'];
 const DOW = ['S','M','T','W','T','F','S'];
 const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SLOTS = [{id:'morning', label:'Morning'}, {id:'day', label:'Through the day'}, {id:'evening', label:'Evening'}];
+const SLOT_IDS = SLOTS.map(s=>s.id);
+const SLOT_SHORT = {morning:'AM', day:'Day', evening:'PM'};
 
 let state = null;
 let tab = 'today';
 let calCursor = new Date();
 let editing = null;      // {mode:'num'|'note', id, k}
+let historyOpen = null;  // date key expanded in the history tab
 let focusNext = null;
 let saveTimer = null;
 
@@ -377,25 +444,32 @@ function uid(){ return 'h' + Math.random().toString(36).slice(2,9); }
 
 function starter(){
   return {habits:[
-    {id:uid(), name:'Move for 20 minutes', emoji:'🏃', ink:INKS[0], days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', archived:false},
-    {id:uid(), name:'Read before bed', emoji:'📖', ink:INKS[2], days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', archived:false},
-    {id:uid(), name:'Steps', emoji:'👟', ink:INKS[4], days:[0,1,2,3,4,5,6], type:'number', unit:'steps', goal:8000, goalDir:'min', archived:false},
-    {id:uid(), name:'Lights out by 11', emoji:'🌙', ink:INKS[5], days:[1,2,3,4,5], type:'check', unit:'', goal:null, goalDir:'min', archived:false}
-  ], log:{}, notes:{}, settings:{clientId:'', linked:false, auto:true, lastSync:0}, updated:Date.now()};
+    {id:uid(), name:'Move for 20 minutes', emoji:'🏃', ink:INKS[0], days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Read before bed', emoji:'📖', ink:INKS[2], days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Steps', emoji:'👟', ink:INKS[4], days:[0,1,2,3,4,5,6], type:'number', unit:'steps', goal:8000, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Lights out by 11', emoji:'🌙', ink:INKS[5], days:[1,2,3,4,5], type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false}
+  ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0}, updated:Date.now()};
 }
 
 function normalize(s){
   if(!s || !Array.isArray(s.habits)) s = starter();
   if(!s.log) s.log = {};
   if(!s.notes) s.notes = {};
-  if(!s.settings) s.settings = {clientId:'', linked:false, auto:true, lastSync:0};
-  if(s.settings.auto === undefined) s.settings.auto = true;
+  if(!s.settings) s.settings = {};
+  const st = s.settings;
+  if(typeof st.clientId !== 'string') st.clientId = '';
+  if(typeof st.token !== 'string') st.token = '';
+  if(typeof st.gistId !== 'string') st.gistId = '';
+  if(st.auto === undefined) st.auto = true;
+  if(!st.lastSync) st.lastSync = 0;
+  if(!st.provider) st.provider = st.clientId ? 'drive' : 'none';
   if(!s.updated) s.updated = Date.now();
   s.habits.forEach(h=>{
     if(h.type !== 'number') h.type = 'check';
     if(typeof h.unit !== 'string') h.unit = '';
     if(h.goal === undefined) h.goal = null;
     if(h.goalDir !== 'max') h.goalDir = 'min';
+    if(!SLOT_IDS.includes(h.slot)) h.slot = 'day';
     if(!Array.isArray(h.days) || !h.days.length) h.days = [0,1,2,3,4,5,6];
   });
   return s;
@@ -432,7 +506,7 @@ function merge(a,b){
   if(!b) return normalize(a);
   const newer = (b.updated||0) >= (a.updated||0) ? b : a;
   const older = newer === a ? b : a;
-  const out = {habits:[], log:{}, notes:{}, settings: newer.settings || older.settings || {},
+  const out = {habits:[], log:{}, notes:{}, settings: a.settings || b.settings || {},
                updated: Math.max(a.updated||0, b.updated||0)};
   [older,newer].forEach(src=>{
     Object.keys(src.log||{}).forEach(k=>{ out.log[k] = Object.assign({}, out.log[k], src.log[k]); });
@@ -441,6 +515,28 @@ function merge(a,b){
   const seen = new Set((newer.habits||[]).map(h=>h.id));
   out.habits = (newer.habits||[]).concat((older.habits||[]).filter(h=>!seen.has(h.id)));
   return normalize(out);
+}
+
+/* ---------------- transfer code ---------------- */
+function payload(){
+  return {habits: state.habits, log: state.log, notes: state.notes, updated: state.updated};
+}
+function encodeCode(){
+  const json = JSON.stringify(payload());
+  const bytes = new TextEncoder().encode(json);
+  let bin = '';
+  bytes.forEach(b=> bin += String.fromCharCode(b));
+  return 'DC1:' + btoa(bin);
+}
+function decodeCode(text){
+  const trimmed = String(text||'').trim().replace(/\s+/g,'');
+  if(!trimmed) throw new Error('Nothing to merge \u2014 paste a code first.');
+  if(trimmed.slice(0,4) === 'DC1:'){
+    const bin = atob(trimmed.slice(4));
+    const bytes = Uint8Array.from(bin, c=>c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  return JSON.parse(String(text));  // raw JSON pasted straight in
 }
 
 /* ---------------- backup file ---------------- */
@@ -474,7 +570,33 @@ const FNAME = 'daily-card.json';
 let token = null, tokenExp = 0, syncing = false, syncTimer = null;
 
 const cfg = () => state.settings;
-const connected = () => !!(cfg().clientId && cfg().linked);
+const provider = () => cfg().provider || 'none';
+const hasCreds = () => provider() === 'gist' ? !!cfg().token
+                     : provider() === 'drive' ? !!cfg().clientId : false;
+const connected = () => !!(hasCreds() && cfg().linked);
+
+/* Strip quotes, spaces, invisible characters, and any URL wrapping that
+   autolinking adds (http:// prefix, trailing slash, surrounding markup). */
+function cleanId(s){
+  const raw = String(s||'')
+    .replace(/[\u200B-\u200D\uFEFF]/g,'')
+    .replace(/["'<>\s]/g,'')
+    .replace(/^https?:\/\//i,'')
+    .replace(/\/+$/,'');
+  const found = raw.match(/\d{6,}-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com/);
+  return found ? found[0] : raw;
+}
+const ID_RE = /^\d{6,}-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
+
+function idProblem(id){
+  if(!id) return 'Paste your Google client ID first.';
+  if(/^GOCSPX-/.test(id)) return 'That\u2019s the client secret. You want the client ID, just above it.';
+  if(/^AIza/.test(id)) return 'That\u2019s an API key, not an OAuth client ID.';
+  if(/^\d+$/.test(id)) return 'That\u2019s the project number. The client ID is longer and ends in .apps.googleusercontent.com.';
+  if(!/\.apps\.googleusercontent\.com$/.test(id)) return 'A client ID always ends in .apps.googleusercontent.com — check you copied the whole thing.';
+  if(!ID_RE.test(id)) return 'That doesn\u2019t look like a complete client ID. Copy it again from the Credentials page.';
+  return null;
+}
 
 function loadGsi(){
   return new Promise((res,rej)=>{
@@ -540,26 +662,85 @@ async function drivePut(t,id,doc){
   return j.id;
 }
 
+/* ---------------- github gist sync ---------------- */
+const GH = 'https://api.github.com';
+const MARK = 'Daily Card — habit tracker data (do not rename)';
+
+function ghHead(extra){
+  const h = {Authorization:'Bearer ' + String(cfg().token||'').trim(),
+             Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28'};
+  return extra ? Object.assign(h, extra) : h;
+}
+function ghErr(r){
+  if(r.status === 401) return new Error('GitHub rejected that token. Check it was copied whole and hasn\u2019t expired.');
+  if(r.status === 403) return new Error('GitHub refused — the token is missing the gist permission.');
+  if(r.status === 404) return new Error('That gist no longer exists. Tap Disconnect, then Connect again.');
+  return new Error('GitHub said no (' + r.status + ').');
+}
+async function ghFindId(){
+  if(cfg().gistId) return cfg().gistId;
+  const r = await fetch(GH + '/gists?per_page=100', {headers: ghHead()});
+  if(!r.ok) throw ghErr(r);
+  const list = await r.json();
+  const hit = list.find(g=> g.description === MARK || (g.files && g.files[FNAME]));
+  if(hit){ state.settings.gistId = hit.id; return hit.id; }
+  return null;
+}
+async function ghPull(){
+  const id = await ghFindId();
+  if(!id) return null;
+  const r = await fetch(GH + '/gists/' + id, {headers: ghHead()});
+  if(!r.ok) throw ghErr(r);
+  const g = await r.json();
+  const f = g.files && g.files[FNAME];
+  if(!f) return null;
+  const text = (f.truncated && f.raw_url) ? await (await fetch(f.raw_url)).text() : f.content;
+  try{ return JSON.parse(text); }catch(e){ return null; }
+}
+async function ghPush(doc){
+  const id = cfg().gistId;
+  const files = {}; files[FNAME] = {content: JSON.stringify(doc, null, 1)};
+  const r = await fetch(GH + '/gists' + (id ? '/' + id : ''), {
+    method: id ? 'PATCH' : 'POST',
+    headers: ghHead({'Content-Type':'application/json'}),
+    body: JSON.stringify({description: MARK, public: false, files: files})
+  });
+  if(!r.ok) throw ghErr(r);
+  const g = await r.json();
+  state.settings.gistId = g.id;
+}
+
+/* ---------------- drive wrappers ---------------- */
+async function drivePull(interactive){
+  const t = await getToken(interactive);
+  const id = await driveFind(t);
+  if(!id) return null;
+  try{ return await driveGet(t, id); }catch(e){ return null; }
+}
+async function drivePush(doc, interactive){
+  const t = await getToken(interactive);
+  const id = await driveFind(t);
+  await drivePut(t, id, doc);
+}
+
 async function sync(interactive){
-  if(syncing || !cfg().clientId) return;
+  const p = provider();
+  if(syncing || p === 'none') return;
   syncing = true;
   if(tab === 'data') render();
   try{
-    const t = await getToken(interactive);
-    const id = await driveFind(t);
-    if(id){
-      let remote = null;
-      try{ remote = await driveGet(t,id); }catch(e){ /* unreadable, overwrite below */ }
-      if(remote && Array.isArray(remote.habits)) state = merge(state, remote);
-    }
+    const remote = p === 'gist' ? await ghPull() : await drivePull(interactive);
+    if(remote && Array.isArray(remote.habits)) state = merge(state, remote);
     state.settings.linked = true;
     state.settings.lastSync = Date.now();
-    await drivePut(t, id, state);
+    const outgoing = Object.assign({}, state, {settings: undefined});
+    if(p === 'gist') await ghPush(outgoing); else await drivePush(outgoing, interactive);
     writeLocal();
     syncing = false; render();
-    if(interactive) toast('Synced with your Drive.');
+    if(interactive) toast('Synced.');
   }catch(e){
     syncing = false;
+    state.settings.linked = false;
     if(interactive){ toast(e.message || 'Sync failed.'); render(); }
     else if(tab === 'data') render();
   }
@@ -603,6 +784,28 @@ function setValue(h,k,v){
   persist();
 }
 function toggleCheck(h,k){ setValue(h,k, done(h,k) ? null : true); }
+
+/* An entry is "settled" once it has been marked either way — done or failed.
+   Settled entries drop off today's list until you undo them. */
+const settled = (h,k) => value(h,k) !== null;
+const failed  = (h,k) => value(h,k) === false;
+function markFail(h,k){ setValue(h,k, false); }
+function unsettle(h,k){ setValue(h,k, null); }
+
+function dayScore(d){
+  const due = active().filter(h=>scheduled(h,d));
+  const k = key(d);
+  const won = due.filter(h=>done(h,k)).length;
+  const lost = due.filter(h=>failed(h,k)).length;
+  return {due:due.length, done:won, failed:lost, open:due.length - won - lost,
+          pct: due.length ? Math.round(won/due.length*100) : null};
+}
+function bySlot(list){
+  const out = {};
+  SLOTS.forEach(s=> out[s.id] = []);
+  list.forEach(h=> (out[h.slot] || out.day).push(h));
+  return out;
+}
 
 function setNote(k,text){
   if(text && text.trim()) state.notes[k] = text;
@@ -695,39 +898,46 @@ function goalText(h){
 }
 
 function todayRow(h,k){
-  const on = done(h,k), s = streak(h), v = value(h,k);
-  let meta;
-  if(h.type === 'number'){
-    meta = logged(h,k)
-      ? '<b>'+fmt(v)+(h.unit?' '+esc(h.unit):'')+'</b>'+(s>1?' · '+s+' day run':'')
-      : goalText(h);
-  }else{
-    meta = s>1 ? '<b>'+s+' day run</b>' : (on ? '<b>Punched</b>' : 'Open');
-  }
-  const control = h.type === 'number'
-    ? '<div class="numwrap"><input class="field'+(on?' met':'')+'" type="number" inputmode="decimal" step="any" '
-      + 'value="'+(v===null?'':v)+'" placeholder="—" data-act="num" data-id="'+h.id+'" data-k="'+k+'" '
-      + 'aria-label="'+esc(h.name)+'"><span class="unit">'+esc(h.unit || 'today')+'</span></div>'
-    : '<button class="slot'+(on?' on':'')+'" data-act="punch" data-id="'+h.id+'" data-k="'+k+'" '
-      + 'aria-pressed="'+on+'" aria-label="'+esc(h.name)+'"></button>';
+  const s = streak(h), v = value(h,k);
+  const meta = h.type === 'number' ? goalText(h)
+             : (s > 0 ? '<b>' + s + ' day run</b>' : 'Open');
 
-  return '<div class="row'+(on?' done':'')+'" style="--hi:'+h.ink+'">'
-    + '<div class="glyph">'+esc(h.emoji||'•')+'</div>'
-    + '<div class="body"><div class="name">'+esc(h.name)+'</div><div class="meta">'+meta+'</div></div>'
-    + control + '</div>';
+  const control = h.type === 'number'
+    ? '<div class="numwrap"><input class="field" type="number" inputmode="decimal" step="any" '
+      + 'value="' + (typeof v === 'number' ? v : '') + '" placeholder="\u2014" data-act="num" data-id="' + h.id + '" data-k="' + k + '" '
+      + 'aria-label="' + esc(h.name) + '"><span class="unit">' + esc(h.unit || 'today') + '</span></div>'
+    : '<button class="slot" data-act="punch" data-id="' + h.id + '" data-k="' + k + '" '
+      + 'aria-label="Mark ' + esc(h.name) + ' done"></button>';
+
+  return '<div class="row" style="--hi:' + h.ink + '">'
+    + '<div class="glyph">' + esc(h.emoji || '\u2022') + '</div>'
+    + '<div class="body"><div class="name">' + esc(h.name) + '</div><div class="meta">' + meta + '</div></div>'
+    + '<div class="marks">'
+    + '<button class="miss" data-act="fail" data-id="' + h.id + '" data-k="' + k + '" '
+    + 'aria-label="Mark ' + esc(h.name) + ' missed">\u2715</button>'
+    + control + '</div></div>';
+}
+
+function settledRow(h,k){
+  const won = done(h,k), v = value(h,k);
+  const val = (h.type === 'number' && typeof v === 'number')
+    ? fmt(v) + (h.unit ? ' ' + esc(h.unit) : '') : '';
+  return '<div class="settled">'
+    + '<span class="mk ' + (won ? 'y' : 'n') + '">' + (won ? '\u2713' : '\u2715') + '</span>'
+    + '<span class="nm">' + (won ? esc(h.name) : '<s>' + esc(h.name) + '</s>') + '</span>'
+    + (val ? '<span class="val">' + val + '</span>' : '')
+    + '<button class="undo" data-act="undo" data-id="' + h.id + '" data-k="' + k + '">Undo</button></div>';
 }
 
 function noteBlock(k){
-  const words = (state.notes[k]||'').trim() ? (state.notes[k].trim().split(/\s+/).length+' words') : '';
-  return '<div class="note"><div class="note-head"><span>Note for the day</span><span>'+words+'</span></div>'
-    + '<textarea id="dayNote" data-act="note" data-k="'+k+'" rows="3" '
-    + 'placeholder="How did it go? What got in the way?">'+esc(state.notes[k]||'')+'</textarea></div>';
+  const words = (state.notes[k]||'').trim() ? (state.notes[k].trim().split(/\s+/).length + ' words') : '';
+  return '<div class="note"><div class="note-head"><span>Note for the day</span><span>' + words + '</span></div>'
+    + '<textarea id="dayNote" data-act="note" data-k="' + k + '" rows="3" '
+    + 'placeholder="How did it go? What got in the way?">' + esc(state.notes[k]||'') + '</textarea></div>';
 }
 
 function renderToday(){
   const t = today(), k = key(t);
-  const due = active().filter(h=>scheduled(h,t));
-  const rest = active().filter(h=>!scheduled(h,t));
 
   if(!active().length){
     return '<div class="empty"><p>Your card is blank.<br>Add a habit to start punching holes.</p>'
@@ -735,18 +945,43 @@ function renderToday(){
       + noteBlock(k);
   }
 
-  let html = due.length
-    ? due.map(h=>todayRow(h,k)).join('')
-    : '<div class="empty"><p>Nothing scheduled for '+DOW_FULL[t.getDay()]+'.<br>A rest day is still a day on plan.</p></div>';
+  const due  = active().filter(h=>scheduled(h,t));
+  const open = due.filter(h=>!settled(h,k));
+  const shut = due.filter(h=>settled(h,k));
+  const rest = active().filter(h=>!scheduled(h,t));
+
+  let html = '';
+
+  if(open.length){
+    const groups = bySlot(open);
+    SLOTS.forEach(sl=>{
+      const list = groups[sl.id];
+      if(!list.length) return;
+      html += '<div class="slot-head">' + sl.label + ' <span class="ct">' + list.length + '</span></div>'
+            + list.map(h=>todayRow(h,k)).join('');
+    });
+  }else if(due.length){
+    const sc = dayScore(t);
+    html += '<div class="empty"><p>Card complete \u2014 ' + sc.done + ' of ' + sc.due + ' punched.<br>'
+          + (sc.failed ? 'Tomorrow is a fresh card.' : 'Clean sweep.') + '</p></div>';
+  }else{
+    html += '<div class="empty"><p>Nothing scheduled for ' + DOW_FULL[t.getDay()] + '.<br>A rest day is still a day on plan.</p></div>';
+  }
+
+  if(shut.length){
+    html += '<div class="lab">Settled today \u2014 ' + dayScore(t).done + '/' + dayScore(t).due + '</div>'
+          + shut.map(h=>settledRow(h,k)).join('');
+  }
 
   if(rest.length){
     html += '<div class="lab">Not on today\u2019s card</div>'
-      + rest.map(h=>'<div class="row off" style="--hi:'+h.ink+'">'
-        + '<div class="glyph">'+esc(h.emoji||'•')+'</div>'
-        + '<div class="body"><div class="name">'+esc(h.name)+'</div>'
-        + '<div class="meta">'+h.days.map(d=>DOW[d]).join(' ')+'</div></div>'
+      + rest.map(h=>'<div class="row off" style="--hi:' + h.ink + '">'
+        + '<div class="glyph">' + esc(h.emoji||'\u2022') + '</div>'
+        + '<div class="body"><div class="name">' + esc(h.name) + '</div>'
+        + '<div class="meta">' + h.days.map(d=>DOW[d]).join(' ') + '</div></div>'
         + '<span class="slot"></span></div>').join('');
   }
+
   return html + noteBlock(k);
 }
 
@@ -789,11 +1024,12 @@ function renderWeek(){
         const k = key(d);
         if(!scheduled(h,d)) return '<td><span class="cell na"></span></td>';
         const on = done(h,k);
-        const lo = !on && logged(h,k);
+        const bad = failed(h,k);
+        const lo = !on && !bad && logged(h,k);
         const sel = editing && editing.mode==='num' && editing.id===h.id && editing.k===k;
         const act = h.type==='number' ? 'editNum' : 'punch';
         const label = esc(h.name)+' on '+pretty(k)+(h.type==='number' && logged(h,k) ? ', '+fmt(value(h,k)) : '');
-        return '<td><button class="cell'+(on?' on':'')+(lo?' lo':'')+(sel?' sel':'')+'" data-act="'+act+'" '
+        return '<td><button class="cell'+(on?' on':'')+(bad?' xx':'')+(lo?' lo':'')+(sel?' sel':'')+'" data-act="'+act+'" '
           + 'data-id="'+h.id+'" data-k="'+k+'" aria-pressed="'+on+'" aria-label="'+label+'"></button></td>';
       }).join('') + '</tr>').join('');
 
@@ -864,12 +1100,59 @@ function renderStats(){
   }
   html += '</div><p class="week-note">Darker days are fuller days. A dot marks a day with a note.</p>';
 
-  const nk = Object.keys(state.notes).filter(k=>state.notes[k].trim()).sort().reverse().slice(0,12);
-  if(nk.length){
-    html += '<div class="lab">Recent notes</div>'
-      + nk.map(k=>'<div class="notelog"><div class="dt">'+pretty(k)+'</div><p>'+esc(state.notes[k])+'</p></div>').join('');
-  }
   return html;
+}
+
+/* ---------------- history ---------------- */
+function historyKeys(){
+  const set = {};
+  Object.keys(state.log).forEach(k=> set[k] = 1);
+  Object.keys(state.notes).forEach(k=>{ if(state.notes[k] && state.notes[k].trim()) set[k] = 1; });
+  set[key(today())] = 1;
+  return Object.keys(set).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse().slice(0, 120);
+}
+
+function renderHistory(){
+  const keys = historyKeys();
+  const tk = key(today());
+  if(keys.length <= 1 && !state.log[tk] && !hasNote(tk)){
+    return '<div class="empty"><p>Nothing logged yet.<br>Days appear here once you punch or write something.</p></div>';
+  }
+
+  return keys.map(k=>{
+    const d = parseKey(k), sc = dayScore(d), note = state.notes[k] || '';
+    const isToday = k === tk;
+    const open = historyOpen === k;
+    const pct = sc.pct === null ? 0 : sc.pct;
+
+    let head = '<button class="hd" data-act="openDay" data-k="' + k + '" aria-expanded="' + open + '">'
+      + '<span class="dt">' + (isToday ? 'Today' : DOW_FULL[d.getDay()])
+      + '<small>' + MONTHS[d.getMonth()].slice(0,3) + ' ' + d.getDate() + ' ' + d.getFullYear() + '</small></span>'
+      + (hasNote(k) ? '<span class="pen">\u270E</span>' : '')
+      + '<span class="bar"><i style="width:' + pct + '%"></i></span>'
+      + '<span class="score">' + (sc.due ? '<b>' + sc.done + '</b>/' + sc.due : '\u2014') + '</span></button>';
+
+    let body = '';
+    if(note) body += '<div class="nt">' + esc(note) + '</div>';
+
+    if(open){
+      const due = active().filter(h=>scheduled(h,d));
+      body += '<div class="det">' + (due.length ? due.map(h=>{
+        const won = done(h,k), lost = failed(h,k), v = value(h,k);
+        const cls = won ? 'y' : lost ? 'n' : 'o';
+        const glyph = won ? '\u2713' : lost ? '\u2715' : '\u00B7';
+        const val = (h.type === 'number' && typeof v === 'number')
+          ? ' \u00B7 ' + fmt(v) + (h.unit ? ' ' + esc(h.unit) : '') : '';
+        return '<div><span class="' + cls + '">' + glyph + '</span>'
+          + esc(h.emoji || '') + ' ' + esc(h.name) + val + '</div>';
+      }).join('') : '<div><span class="o">\u00B7</span>Nothing was scheduled</div>') + '</div>'
+      + '<div class="er" style="margin-top:11px"><button class="btn" data-act="noteFor" data-k="' + k + '">'
+      + (hasNote(k) ? 'Edit note' : 'Add a note') + '</button></div>'
+      + (editing && editing.mode === 'note' && editing.k === k ? renderEditor() : '');
+    }
+
+    return '<div class="dayrow">' + head + body + '</div>';
+  }).join('');
 }
 
 /* ---------------- edit ---------------- */
@@ -895,6 +1178,8 @@ function renderEdit(){
         + '<button class="icon-btn" data-act="move" data-id="'+h.id+'" data-step="1" aria-label="Move down"'+(i===live.length-1?' disabled style="opacity:.25"':'')+'>&darr;</button>'
       + '</div>'
       + '<div class="type-row">'
+        + '<div class="seg">' + SLOTS.map(sl=>'<button data-act="slot" data-id="' + h.id + '" data-slot="' + sl.id
+          + '" aria-pressed="' + (h.slot === sl.id) + '">' + SLOT_SHORT[sl.id] + '</button>').join('') + '</div>'
         + '<div class="seg"><button data-act="type" data-id="'+h.id+'" data-type="check" aria-pressed="'+(!num)+'">Tick off</button>'
         + '<button data-act="type" data-id="'+h.id+'" data-type="number" aria-pressed="'+num+'">Number</button></div>'
         + numFields
@@ -929,23 +1214,56 @@ function renderData(){
   let statusCls = 'status', statusTxt;
   if(syncing){ statusTxt = 'Syncing…'; }
   else if(connected()){ statusCls += ' live'; statusTxt = last ? 'Last synced ' + last.toLocaleString() : 'Connected'; }
-  else if(s.clientId){ statusCls += ' warn'; statusTxt = 'Not connected'; }
+  else if(hasCreds()){ statusCls += ' warn'; statusTxt = 'Not connected'; }
   else { statusTxt = 'Sync is off — this device only'; }
+
+  const p = provider();
+  const actions = '<button class="btn solid" data-act="connect">' + (connected() ? 'Sync now' : 'Connect') + '</button>'
+    + (connected() ? '<button class="btn" data-act="disconnect">Disconnect</button>' : '');
+
+  let body;
+  if(p === 'gist'){
+    body = '<p>Keeps your card in a secret GitHub gist — a private file on the account you already have. '
+      + 'Create a token at <b>github.com/settings/tokens</b> with only the <b>gist</b> box ticked, then paste it here. '
+      + 'No project setup, no origins, no approval screens.</p>'
+      + '<div class="er"><input type="text" id="ghToken" placeholder="ghp_… or github_pat_…" value="' + esc(s.token||'') + '" spellcheck="false" aria-label="GitHub token">'
+      + actions + '</div>'
+      + '<label class="toggle"><input type="checkbox" data-act="auto"' + (s.auto ? ' checked' : '') + '>Sync automatically after changes</label>'
+      + '<p style="margin:14px 0 0;font-size:12.5px">The token is stored in this browser, so give it the gist permission and nothing else. '
+      + 'You can revoke it from GitHub at any time, and paste the same one on your other devices.</p>';
+  }else if(p === 'drive'){
+    body = '<p>Keeps your card in a private folder in your own Google Drive. Needs a client ID from a Google Cloud project — the fiddlier of the two options.</p>'
+      + '<div class="er"><input type="text" id="clientId" placeholder="xxxxx.apps.googleusercontent.com" value="' + esc(s.clientId||'') + '" spellcheck="false" aria-label="Google client ID">'
+      + actions + '</div>'
+      + '<label class="toggle"><input type="checkbox" data-act="auto"' + (s.auto ? ' checked' : '') + '>Sync automatically after changes</label>'
+      + '<p style="margin:14px 0 0;font-size:12.5px">This exact address must be listed under <b>Authorized JavaScript origins</b> — no trailing slash, no page path:</p>'
+      + '<div class="er" style="margin-top:8px"><code class="origin">' + esc(location.origin) + '</code>'
+      + '<button class="btn" data-act="copyOrigin">Copy</button></div>';
+  }else{
+    body = '<p>This card lives only in this browser. Turn on GitHub sync to keep your phone and laptop in step — it takes about a minute and needs nothing but a token.</p>';
+  }
 
   return '<div class="panel"><h4>This device</h4>'
     + '<p>' + days + ' day' + (days===1?'':'s') + ' logged · ' + notes + ' note' + (notes===1?'':'s') + ' written. '
     + (storeOk ? 'Saved in this browser.' : 'This browser is blocking storage — nothing is being saved.') + '</p>'
     + '<div class="er"><button class="btn solid" data-act="export">Download backup</button>'
     + '<button class="btn" data-act="pickImport">Restore from file</button>'
+    + (navigator.share ? '<button class="btn" data-act="share">Send elsewhere</button>' : '')
     + '<input type="file" id="importFile" accept="application/json,.json" hidden></div>'
-    + '<p style="margin:12px 0 0;font-size:12.5px">A backup is a single JSON file. Keep it in Drive, iCloud, or anywhere else — restoring merges it back in without wiping what\u2019s already here.</p></div>'
+    + '<p style="margin:12px 0 0;font-size:12.5px">A backup is a single JSON file. Keep it in Drive, iCloud, Files, or an email to yourself — restoring merges it back in without wiping what\u2019s already here.</p></div>'
+
+    + '<div class="panel"><h4>Hand off to another device</h4>'
+    + '<p>No accounts, no setup. Copy this device\u2019s code, send it to yourself however you like, then paste it into this box on the other device and merge.</p>'
+    + '<div class="er"><button class="btn" data-act="copyCode">Copy this device\u2019s code</button>'
+    + '<button class="btn solid" data-act="pasteCode">Merge pasted code</button></div>'
+    + '<textarea class="xfer" id="xfer" placeholder="Paste a transfer code here" spellcheck="false" aria-label="Transfer code"></textarea></div>'
 
     + '<div class="panel"><h4>Sync across devices</h4>'
-    + '<p>Keeps one copy of your card in your own Google Drive, in a private app folder only this app can see. Paste the client ID from your Google Cloud project — setup steps are in the README.</p>'
-    + '<div class="er"><input type="text" id="clientId" placeholder="xxxxx.apps.googleusercontent.com" value="' + esc(s.clientId||'') + '" spellcheck="false" aria-label="Google client ID">'
-    + '<button class="btn solid" data-act="connect">' + (connected() ? 'Sync now' : 'Connect') + '</button>'
-    + (connected() ? '<button class="btn" data-act="disconnect">Disconnect</button>' : '') + '</div>'
-    + '<label class="toggle"><input type="checkbox" data-act="auto"' + (s.auto ? ' checked' : '') + '>Sync automatically after changes</label>'
+    + '<div class="seg" style="margin-bottom:12px">'
+    + '<button data-act="prov" data-p="none" aria-pressed="' + (p==='none') + '">Off</button>'
+    + '<button data-act="prov" data-p="gist" aria-pressed="' + (p==='gist') + '">GitHub</button>'
+    + '<button data-act="prov" data-p="drive" aria-pressed="' + (p==='drive') + '">Drive</button></div>'
+    + body
     + '<div class="' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div></div>'
 
     + '<div class="panel"><h4>If two devices disagree</h4>'
@@ -959,6 +1277,7 @@ function render(){
   const v = document.getElementById('view');
   v.innerHTML = tab==='today' ? renderToday()
               : tab==='week'  ? renderWeek()
+              : tab==='history' ? renderHistory()
               : tab==='stats' ? renderStats()
               : tab==='data'  ? renderData()
               : renderEdit();
@@ -977,7 +1296,7 @@ function addHabit(name){
   name = (name||'').trim();
   if(!name){ toast('Give the habit a name first.'); return; }
   state.habits.push({id:uid(), name, emoji:'', ink:INKS[state.habits.length % INKS.length],
-    days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', archived:false});
+    days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false});
   persist(); render();
 }
 
@@ -998,6 +1317,18 @@ view.addEventListener('click', e=>{
       renderMast(); setTimeout(render,190); return;
     }
     render(); return;
+  }
+  if(act==='fail'){
+    markFail(h, b.dataset.k);
+    render(); return;
+  }
+  if(act==='undo'){
+    unsettle(h, b.dataset.k);
+    render(); return;
+  }
+  if(act==='openDay'){
+    historyOpen = historyOpen === b.dataset.k ? null : b.dataset.k;
+    editing = null; render(); return;
   }
   if(act==='editNum'){
     editing = {mode:'num', id:h.id, k:b.dataset.k};
@@ -1028,6 +1359,7 @@ view.addEventListener('click', e=>{
     h.type = b.dataset.type;
     persist(); render(); return;
   }
+  if(act==='slot'){ h.slot = b.dataset.slot; persist(); render(); return; }
   if(act==='ink'){ h.ink = b.dataset.ink; persist(); render(); return; }
   if(act==='day'){
     const d = Number(b.dataset.day);
@@ -1050,12 +1382,67 @@ view.addEventListener('click', e=>{
   }
   if(act==='cal'){ calCursor.setMonth(calCursor.getMonth()+Number(b.dataset.step)); render(); return; }
   if(act==='export'){ exportBackup(); return; }
+  if(act==='copyCode'){
+    const code = encodeCode();
+    const box = document.getElementById('xfer');
+    if(box) box.value = code;
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(code)
+        .then(()=>toast('Copied \u2014 paste it on the other device.'))
+        .catch(()=>toast('Copy it from the box below.'));
+    }else{
+      if(box){ box.focus(); box.select(); }
+      toast('Copy it from the box below.');
+    }
+    return;
+  }
+  if(act==='pasteCode'){
+    try{
+      const incoming = decodeCode(document.getElementById('xfer').value);
+      if(!incoming || !Array.isArray(incoming.habits)) throw new Error('bad');
+      state = merge(state, incoming);
+      writeLocal(); render();
+      toast('Merged in.');
+    }catch(e){ toast(e.message && e.message.indexOf('paste') > -1 ? e.message : 'That code didn\u2019t read as a Daily Card backup.'); }
+    return;
+  }
+  if(act==='share'){
+    const text = JSON.stringify(payload(), null, 1);
+    const name = 'daily-card-' + key(today()) + '.json';
+    const file = (window.File && navigator.canShare)
+      ? new File([text], name, {type:'application/json'}) : null;
+    if(file && navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:'Daily Card backup'}).catch(()=>{});
+    }else{
+      navigator.share({title:'Daily Card backup', text: encodeCode()}).catch(()=>{});
+    }
+    return;
+  }
   if(act==='pickImport'){ document.getElementById('importFile').click(); return; }
+  if(act==='prov'){
+    state.settings.provider = b.dataset.p;
+    state.settings.linked = false;
+    persist(); render(); return;
+  }
   if(act==='connect'){
-    const id = document.getElementById('clientId').value.trim();
-    if(!id){ toast('Paste your Google client ID first.'); return; }
-    state.settings.clientId = id; writeLocal();
+    if(provider() === 'gist'){
+      const t = String(document.getElementById('ghToken').value||'').replace(/[\s"'<>]/g,'');
+      if(!t){ toast('Paste your GitHub token first.'); return; }
+      if(!/^(ghp_|gho_|github_pat_)/.test(t)){ toast('GitHub tokens start with ghp_ or github_pat_.'); return; }
+      state.settings.token = t; writeLocal(); render();
+      sync(true); return;
+    }
+    const id = cleanId(document.getElementById('clientId').value);
+    const problem = idProblem(id);
+    if(problem){ toast(problem); return; }
+    state.settings.clientId = id; writeLocal(); render();
     sync(true); return;
+  }
+  if(act==='copyOrigin'){
+    const o = location.origin;
+    if(navigator.clipboard) navigator.clipboard.writeText(o).then(()=>toast('Copied ' + o), ()=>toast(o));
+    else toast(o);
+    return;
   }
   if(act==='disconnect'){ disconnect(); return; }
   if(act==='add'){ addHabit(document.getElementById('newHabit').value); return; }
