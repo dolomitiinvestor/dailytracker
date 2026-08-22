@@ -1387,6 +1387,7 @@ function renderBooks(){
     + '<div class="bktile"><b>' + fmt(totalPages) + '</b><i>Pages in ' + y + '</i></div>'
     + '<div class="bktile"><b>' + (avgPages===null?'—':avgPages) + '</b><i>Avg pages / book</i></div>'
     + '<div class="bktile"><b>' + fmt(projBooks) + '</b><i>Projected books</i></div>'
+    + '<div class="bktile"><b>' + fmt(projPages) + '</b><i>Projected pages</i></div>'
     + '</div>'
     + '<p class="week-note">Day ' + dayOfYear + ' of ' + diy + ' — at this pace, ' + y + ' finishes around <b>' + fmt(projBooks) + '</b> book'
     + (projBooks===1?'':'s') + (totalPages ? ' and roughly <b>' + fmt(projPages) + '</b> pages' : '') + '.</p>';
