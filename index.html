@@ -253,6 +253,18 @@ input[type=number]{-moz-appearance:textfield}
 .notelog .dt{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
 .notelog p{font-size:14.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
 
+/* ---------- books ---------- */
+.bookstats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.bktile{background:rgba(255,255,255,.4);border:1px solid var(--rule-2);border-radius:2px;padding:14px;text-align:center}
+.bktile b{display:block;font-family:'DM Mono',monospace;font-size:26px;font-weight:500;color:var(--hi)}
+.bktile i{display:block;font-style:normal;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.book{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px dotted var(--rule-2)}
+.book:last-child{border-bottom:0}
+.book .ttl{flex:1;min-width:0}
+.book .ttl b{display:block;font-weight:600;font-size:14.5px;word-break:break-word}
+.book .ttl span{display:block;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-3);margin-top:2px}
+.book .pg{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-2);flex:none;text-align:right;white-space:nowrap}
+
 /* ---------- data / sync ---------- */
 .panel{border:1px solid var(--rule-2);border-radius:2px;background:rgba(255,255,255,.34);padding:16px;margin-bottom:14px}
 .panel h4{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:400;color:var(--ink-2);margin-bottom:8px}
@@ -412,6 +424,7 @@ select.mini{width:auto;font-size:11.5px;letter-spacing:.06em}
       <button class="tab" role="tab" data-tab="week" aria-selected="false">Week</button>
       <button class="tab" role="tab" data-tab="history" aria-selected="false">History</button>
       <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
+      <button class="tab" role="tab" data-tab="books" aria-selected="false">Books</button>
       <button class="tab" role="tab" data-tab="edit" aria-selected="false">Habits</button>
       <button class="tab" role="tab" data-tab="data" aria-selected="false">Data</button>
     </nav>
@@ -476,7 +489,8 @@ function starter(){
     {id:uid(), name:'Bed hungry', emoji:'🍽️', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
     {id:uid(), name:'Went to bed at 1130', emoji:'🛏️', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
     {id:uid(), name:'Weight', emoji:'⚖️', ink:INKS[0], days:ALL, type:'number', unit:'lbs', goal:null, goalDir:'min', slot:'morning', archived:false}
-  ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0}, updated:Date.now()};
+  ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0},
+  goodreads:{url:'', items:[], lastFetch:0}, updated:Date.now()};
 }
 
 function normalize(s){
@@ -491,6 +505,10 @@ function normalize(s){
   if(st.auto === undefined) st.auto = true;
   if(!st.lastSync) st.lastSync = 0;
   if(!st.provider) st.provider = st.clientId ? 'drive' : 'none';
+  if(!s.goodreads || typeof s.goodreads !== 'object') s.goodreads = {};
+  if(typeof s.goodreads.url !== 'string') s.goodreads.url = '';
+  if(!Array.isArray(s.goodreads.items)) s.goodreads.items = [];
+  if(!s.goodreads.lastFetch) s.goodreads.lastFetch = 0;
   if(!s.updated) s.updated = Date.now();
   s.habits.forEach(h=>{
     if(h.type !== 'number') h.type = 'check';
@@ -536,6 +554,7 @@ function merge(a,b){
   const newer = (b.updated||0) >= (a.updated||0) ? b : a;
   const older = newer === a ? b : a;
   const out = {habits:[], log:{}, notes:{}, settings: a.settings || b.settings || {},
+               goodreads: newer.goodreads || older.goodreads || null,
                updated: Math.max(a.updated||0, b.updated||0)};
   [older,newer].forEach(src=>{
     Object.keys(src.log||{}).forEach(k=>{ out.log[k] = Object.assign({}, out.log[k], src.log[k]); });
@@ -802,6 +821,83 @@ function disconnect(){
   token = null; tokenExp = 0;
   persist(); render();
   toast('Disconnected. Your Drive copy was left alone.');
+}
+
+/* ---------------- goodreads ---------------- */
+/* Goodreads sends no CORS headers, so a browser can't read the feed directly —
+   it has to go through a public read-only mirror that adds them. Two mirrors
+   are tried in turn since either can be flaky or rate-limited on its own. */
+const CORS_PROXIES = [
+  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  url => 'https://corsproxy.io/?url=' + encodeURIComponent(url)
+];
+let grFetching = false, grError = '';
+
+async function fetchViaProxies(url){
+  let lastErr;
+  for(const build of CORS_PROXIES){
+    try{
+      const r = await fetch(build(url));
+      if(!r.ok) throw new Error('status ' + r.status);
+      const text = await r.text();
+      if(!text || text.length < 20) throw new Error('empty response');
+      return text;
+    }catch(e){ lastErr = e; }
+  }
+  throw new Error('Could not reach Goodreads through either relay — try again in a bit. (' + (lastErr && lastErr.message) + ')');
+}
+
+function parseGoodreadsRss(text){
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  if(doc.querySelector('parsererror')) throw new Error('That link didn’t come back as a feed — check it’s the RSS URL from your Goodreads shelf.');
+  const tag = (el,name)=>{ const n = el.querySelector(name); return n ? n.textContent.trim() : ''; };
+  const items = Array.from(doc.querySelectorAll('item')).map(it=>{
+    const pages = parseInt(tag(it,'num_pages'),10);
+    const readRaw = tag(it,'user_read_at');
+    const read = readRaw ? new Date(readRaw) : null;
+    return {
+      id: tag(it,'book_id') || tag(it,'guid'),
+      title: tag(it,'title'),
+      author: tag(it,'author_name'),
+      pages: isNaN(pages) ? null : pages,
+      readAt: (read && !isNaN(read)) ? read.getTime() : null,
+      link: tag(it,'link')
+    };
+  }).filter(b=>b.title);
+  if(!items.length) throw new Error('No books came back — make sure the link is your “read” shelf RSS URL.');
+  return items;
+}
+
+async function fetchGoodreads(interactive){
+  if(grFetching) return;
+  const input = document.getElementById('grUrl');
+  const url = String((input ? input.value : state.goodreads.url) || '').trim();
+  if(!url){ toast('Paste your Goodreads RSS link first.'); return; }
+  state.goodreads.url = url;
+  grFetching = true; grError = '';
+  render();
+  try{
+    const text = await fetchViaProxies(url);
+    const items = parseGoodreadsRss(text);
+    state.goodreads.items = items;
+    state.goodreads.lastFetch = Date.now();
+    grFetching = false; grError = '';
+    persist(); render();
+    if(interactive) toast('Pulled in ' + items.length + ' books.');
+  }catch(e){
+    grFetching = false;
+    grError = (e && e.message) || 'Refresh failed — check your connection and try again.';
+    persist(); render();
+  }
+}
+
+function isLeapYear(y){ return (y%4===0 && y%100!==0) || y%400===0; }
+
+function booksThisYear(){
+  const y = today().getFullYear();
+  return (state.goodreads.items||[])
+    .filter(b=> b.readAt && new Date(b.readAt).getFullYear() === y)
+    .sort((a,b)=> b.readAt - a.readAt);
 }
 
 /* ---------------- model helpers ---------------- */
@@ -1252,6 +1348,62 @@ function renderEdit(){
   return html;
 }
 
+/* ---------------- books tab ---------------- */
+function renderBooks(){
+  const g = state.goodreads;
+  const y = today().getFullYear();
+  const list = booksThisYear();
+  const withPages = list.filter(b=>typeof b.pages === 'number');
+  const totalPages = withPages.reduce((s,b)=>s+b.pages,0);
+  const avgPages = withPages.length ? Math.round(totalPages/withPages.length) : null;
+
+  const start = new Date(y,0,1);
+  const dayOfYear = Math.floor((today()-start)/86400000) + 1;
+  const diy = isLeapYear(y) ? 366 : 365;
+  const projBooks = list.length ? Math.round(list.length / dayOfYear * diy) : 0;
+  const projPages = totalPages ? Math.round(totalPages / dayOfYear * diy) : 0;
+
+  let statusCls = 'status', statusTxt;
+  if(grFetching){ statusTxt = 'Refreshing…'; }
+  else if(grError){ statusCls += ' warn'; statusTxt = grError; }
+  else if(g.lastFetch){ statusCls += ' live'; statusTxt = 'Last refreshed ' + new Date(g.lastFetch).toLocaleString(); }
+  else{ statusTxt = 'Not refreshed yet'; }
+
+  let html = '<div class="panel"><h4>Goodreads</h4>'
+    + '<p>Paste the RSS link for your “read” shelf (Goodreads → My Books → RSS, with <code>shelf=read</code>), '
+    + 'then refresh. The link is kept only on this device, the same as a sync token.</p>'
+    + '<div class="er"><input type="text" id="grUrl" placeholder="https://www.goodreads.com/review/list_rss/..." '
+    + 'value="' + esc(g.url||'') + '" spellcheck="false" aria-label="Goodreads RSS URL">'
+    + '<button class="btn solid" data-act="grRefresh"' + (grFetching?' disabled':'') + '>'
+    + (grFetching ? 'Refreshing…' : 'Refresh') + '</button></div>'
+    + '<div class="' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div></div>';
+
+  if(!g.items.length){
+    return html + '<div class="empty"><p>No books pulled in yet.<br>Paste your RSS link above and hit refresh.</p></div>';
+  }
+
+  html += '<div class="bookstats">'
+    + '<div class="bktile"><b>' + list.length + '</b><i>Read in ' + y + '</i></div>'
+    + '<div class="bktile"><b>' + fmt(totalPages) + '</b><i>Pages in ' + y + '</i></div>'
+    + '<div class="bktile"><b>' + (avgPages===null?'—':avgPages) + '</b><i>Avg pages / book</i></div>'
+    + '<div class="bktile"><b>' + fmt(projBooks) + '</b><i>Projected books</i></div>'
+    + '</div>'
+    + '<p class="week-note">Day ' + dayOfYear + ' of ' + diy + ' — at this pace, ' + y + ' finishes around <b>' + fmt(projBooks) + '</b> book'
+    + (projBooks===1?'':'s') + (totalPages ? ' and roughly <b>' + fmt(projPages) + '</b> pages' : '') + '.</p>';
+
+  html += '<div class="lab">Read in ' + y + '</div>';
+  html += list.length ? list.map(b=>'<div class="book"><div class="ttl"><b>' + esc(b.title) + '</b>'
+    + '<span>' + esc(b.author||'') + (b.readAt ? ' · ' + pretty(key(new Date(b.readAt))) : '') + '</span></div>'
+    + '<div class="pg">' + (typeof b.pages==='number' ? fmt(b.pages) + ' pg' : '—') + '</div></div>').join('')
+    : '<div class="empty"><p>Nothing marked read in ' + y + ' yet.</p></div>';
+
+  const rest = g.items.length - list.length;
+  if(rest > 0) html += '<p class="week-note">' + fmt(rest) + ' more book' + (rest===1?'':'s') + ' from other years in the last pull '
+    + '— Goodreads’ RSS only returns your most recent shelf activity.</p>';
+
+  return html;
+}
+
 /* ---------------- data tab ---------------- */
 function renderData(){
   const s = cfg();
@@ -1333,6 +1485,7 @@ function render(){
               : tab==='week'  ? renderWeek()
               : tab==='history' ? renderHistory()
               : tab==='stats' ? renderStats()
+              : tab==='books' ? renderBooks()
               : tab==='data'  ? renderData()
               : renderEdit();
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
@@ -1499,6 +1652,7 @@ view.addEventListener('click', e=>{
     return;
   }
   if(act==='disconnect'){ disconnect(); return; }
+  if(act==='grRefresh'){ fetchGoodreads(true); return; }
   if(act==='add'){ addHabit(document.getElementById('newHabit').value); return; }
   if(act==='quick'){ addHabit(document.getElementById('quickAdd').value); return; }
 });
