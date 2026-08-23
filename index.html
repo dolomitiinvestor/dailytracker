@@ -265,6 +265,18 @@ input[type=number]{-moz-appearance:textfield}
 .book .ttl span{display:block;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-3);margin-top:2px}
 .book .pg{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-2);flex:none;text-align:right;white-space:nowrap}
 
+.pnl-hd{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;padding:0;cursor:pointer;font:inherit}
+.pnl-hd .ttl{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:400;color:var(--ink-2);flex:none}
+.pnl-hd .pnl-sum{flex:1;min-width:0;font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.pnl-hd .pnl-sum.warn{color:#A6322F}
+.pnl-hd .chev{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-3);flex:none;width:10px;text-align:center}
+.pnl-body{margin-top:12px}
+.monthchart{width:100%;height:auto;display:block;overflow:visible}
+.axis-lab{font-family:'DM Mono',monospace;font-size:8.5px;fill:var(--ink-3)}
+.chart-legend{display:flex;gap:16px;margin-top:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.chart-legend span{display:flex;align-items:center;gap:6px}
+.chart-legend i{width:9px;height:9px;border-radius:2px;display:block}
+
 /* ---------- data / sync ---------- */
 .panel{border:1px solid var(--rule-2);border-radius:2px;background:rgba(255,255,255,.34);padding:16px;margin-bottom:14px}
 .panel h4{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:400;color:var(--ink-2);margin-bottom:8px}
@@ -452,6 +464,8 @@ let editing = null;      // {mode:'num'|'note', id, k}
 let historyOpen = null;  // date key expanded in the history tab
 let focusNext = null;
 let saveTimer = null;
+let grOpen = null;        // Goodreads panel expanded; null = auto (open until a link is saved)
+let booksChartOpen = false; // monthly books/pages chart expanded
 
 function uid(){ return 'h' + Math.random().toString(36).slice(2,9); }
 
@@ -1349,6 +1363,46 @@ function renderEdit(){
 }
 
 /* ---------------- books tab ---------------- */
+function grIsOpen(){ return grOpen === null ? !state.goodreads.url : grOpen; }
+
+function booksMonthlyChart(){
+  const y = today().getFullYear();
+  const counts = new Array(12).fill(0), pages = new Array(12).fill(0);
+  (state.goodreads.items||[]).forEach(b=>{
+    if(!b.readAt) return;
+    const d = new Date(b.readAt);
+    if(d.getFullYear() !== y) return;
+    counts[d.getMonth()]++;
+    if(typeof b.pages === 'number') pages[d.getMonth()] += b.pages;
+  });
+  if(!counts.some(n=>n>0)){
+    return '<div class="empty"><p>Nothing read in ' + y + ' yet.</p></div>';
+  }
+  const maxBooks = Math.max(1, ...counts), maxPages = Math.max(1, ...pages);
+  const W = 600, H = 220, padL = 26, padR = 26, padT = 10, padB = 20;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const monW = plotW / 12, gap = monW * 0.16, barW = (monW - gap*2) / 2;
+
+  let bars = '', labels = '';
+  for(let m=0;m<12;m++){
+    const x0 = padL + m*monW + gap;
+    const bH1 = counts[m]/maxBooks * plotH, bH2 = pages[m]/maxPages * plotH;
+    const y1 = padT + plotH - bH1, y2 = padT + plotH - bH2;
+    bars += '<rect x="' + x0.toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + bH1.toFixed(1) + '" fill="var(--mimeo)" rx="1">'
+      + '<title>' + MONTHS[m] + ': ' + counts[m] + ' book' + (counts[m]===1?'':'s') + '</title></rect>';
+    bars += '<rect x="' + (x0+barW).toFixed(1) + '" y="' + y2.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + bH2.toFixed(1) + '" fill="#9A5A16" rx="1">'
+      + '<title>' + MONTHS[m] + ': ' + fmt(pages[m]) + ' pages</title></rect>';
+    labels += '<text x="' + (padL + m*monW + monW/2).toFixed(1) + '" y="' + (H-6) + '" text-anchor="middle" class="axis-lab">' + MONTHS[m].slice(0,1) + '</text>';
+  }
+  const base = '<line x1="' + padL + '" y1="' + (padT+plotH) + '" x2="' + (W-padR) + '" y2="' + (padT+plotH) + '" stroke="var(--rule-2)" stroke-width="1"/>';
+  const scaleLabs = '<text x="' + padL + '" y="' + (padT+8) + '" text-anchor="start" class="axis-lab">' + maxBooks + ' bks</text>'
+    + '<text x="' + (W-padR) + '" y="' + (padT+8) + '" text-anchor="end" class="axis-lab">' + fmt(maxPages) + ' pg</text>';
+
+  return '<svg class="monthchart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Books and pages read by month, ' + y + '">'
+    + base + scaleLabs + bars + labels + '</svg>'
+    + '<div class="chart-legend"><span><i style="background:var(--mimeo)"></i>Books</span><span><i style="background:#9A5A16"></i>Pages</span></div>';
+}
+
 function renderBooks(){
   const g = state.goodreads;
   const y = today().getFullYear();
@@ -1369,14 +1423,32 @@ function renderBooks(){
   else if(g.lastFetch){ statusCls += ' live'; statusTxt = 'Last refreshed ' + new Date(g.lastFetch).toLocaleString(); }
   else{ statusTxt = 'Not refreshed yet'; }
 
-  let html = '<div class="panel"><h4>Goodreads</h4>'
-    + '<p>Paste the RSS link for your “read” shelf (Goodreads → My Books → RSS, with <code>shelf=read</code>), '
-    + 'then refresh. The link is kept only on this device, the same as a sync token.</p>'
-    + '<div class="er"><input type="text" id="grUrl" placeholder="https://www.goodreads.com/review/list_rss/..." '
-    + 'value="' + esc(g.url||'') + '" spellcheck="false" aria-label="Goodreads RSS URL">'
-    + '<button class="btn solid" data-act="grRefresh"' + (grFetching?' disabled':'') + '>'
-    + (grFetching ? 'Refreshing…' : 'Refresh') + '</button></div>'
-    + '<div class="' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div></div>';
+  const grOpenNow = grIsOpen();
+  let grSummary;
+  if(grFetching) grSummary = 'Refreshing…';
+  else if(grError) grSummary = grError;
+  else if(g.lastFetch) grSummary = g.items.length + ' book' + (g.items.length===1?'':'s') + ' pulled · refreshed ' + new Date(g.lastFetch).toLocaleDateString();
+  else grSummary = 'Not connected yet';
+
+  let html = '<div class="panel">'
+    + '<button class="pnl-hd" data-act="grToggle" aria-expanded="' + grOpenNow + '">'
+    + '<span class="ttl">Goodreads</span>'
+    + '<span class="pnl-sum' + (grError && !grFetching ? ' warn' : '') + '">' + esc(grSummary) + '</span>'
+    + '<span class="chev">' + (grOpenNow ? '▾' : '▸') + '</span>'
+    + '</button>';
+
+  if(grOpenNow){
+    html += '<div class="pnl-body">'
+      + '<p>Paste the RSS link for your “read” shelf (Goodreads → My Books → RSS, with <code>shelf=read</code>), '
+      + 'then refresh. The link is kept only on this device, the same as a sync token.</p>'
+      + '<div class="er"><input type="text" id="grUrl" placeholder="https://www.goodreads.com/review/list_rss/..." '
+      + 'value="' + esc(g.url||'') + '" spellcheck="false" aria-label="Goodreads RSS URL">'
+      + '<button class="btn solid" data-act="grRefresh"' + (grFetching?' disabled':'') + '>'
+      + (grFetching ? 'Refreshing…' : 'Refresh') + '</button></div>'
+      + '<div class="' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div>'
+      + '</div>';
+  }
+  html += '</div>';
 
   if(!g.items.length){
     return html + '<div class="empty"><p>No books pulled in yet.<br>Paste your RSS link above and hit refresh.</p></div>';
@@ -1391,6 +1463,15 @@ function renderBooks(){
     + '</div>'
     + '<p class="week-note">Day ' + dayOfYear + ' of ' + diy + ' — at this pace, ' + y + ' finishes around <b>' + fmt(projBooks) + '</b> book'
     + (projBooks===1?'':'s') + (totalPages ? ' and roughly <b>' + fmt(projPages) + '</b> pages' : '') + '.</p>';
+
+  html += '<div class="panel">'
+    + '<button class="pnl-hd" data-act="chartToggle" aria-expanded="' + booksChartOpen + '">'
+    + '<span class="ttl">Books &amp; pages by month</span>'
+    + '<span class="pnl-sum">' + y + '</span>'
+    + '<span class="chev">' + (booksChartOpen ? '▾' : '▸') + '</span>'
+    + '</button>';
+  if(booksChartOpen) html += '<div class="pnl-body">' + booksMonthlyChart() + '</div>';
+  html += '</div>';
 
   html += '<div class="lab">Read in ' + y + '</div>';
   html += list.length ? list.map(b=>'<div class="book"><div class="ttl"><b>' + esc(b.title) + '</b>'
@@ -1654,6 +1735,8 @@ view.addEventListener('click', e=>{
   }
   if(act==='disconnect'){ disconnect(); return; }
   if(act==='grRefresh'){ fetchGoodreads(true); return; }
+  if(act==='grToggle'){ grOpen = !grIsOpen(); render(); return; }
+  if(act==='chartToggle'){ booksChartOpen = !booksChartOpen; render(); return; }
   if(act==='add'){ addHabit(document.getElementById('newHabit').value); return; }
   if(act==='quick'){ addHabit(document.getElementById('quickAdd').value); return; }
 });
