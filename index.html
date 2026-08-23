@@ -273,6 +273,7 @@ input[type=number]{-moz-appearance:textfield}
 .pnl-body{margin-top:12px}
 .monthchart{width:100%;height:auto;display:block;overflow:visible}
 .axis-lab{font-family:'DM Mono',monospace;font-size:8.5px;fill:var(--ink-3)}
+.axis-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;fill:var(--ink-3)}
 .chart-legend{display:flex;gap:16px;margin-top:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
 .chart-legend span{display:flex;align-items:center;gap:6px}
 .chart-legend i{width:9px;height:9px;border-radius:2px;display:block}
@@ -436,6 +437,7 @@ select.mini{width:auto;font-size:11.5px;letter-spacing:.06em}
       <button class="tab" role="tab" data-tab="week" aria-selected="false">Week</button>
       <button class="tab" role="tab" data-tab="history" aria-selected="false">History</button>
       <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
+      <button class="tab" role="tab" data-tab="weight" aria-selected="false">Weight</button>
       <button class="tab" role="tab" data-tab="books" aria-selected="false">Books</button>
       <button class="tab" role="tab" data-tab="edit" aria-selected="false">Habits</button>
       <button class="tab" role="tab" data-tab="data" aria-selected="false">Data</button>
@@ -466,6 +468,7 @@ let focusNext = null;
 let saveTimer = null;
 let grOpen = null;        // Goodreads panel expanded; null = auto (open until a link is saved)
 let booksChartOpen = false; // monthly books/pages chart expanded
+let weightRange = 90;     // days shown on the Weight chart; 0 = all time
 
 function uid(){ return 'h' + Math.random().toString(36).slice(2,9); }
 
@@ -1403,6 +1406,117 @@ function booksMonthlyChart(){
     + '<div class="chart-legend"><span><i style="background:var(--mimeo)"></i>Books</span><span><i style="background:#9A5A16"></i>Pages</span></div>';
 }
 
+/* ---------------- weight tab ---------------- */
+function weightHabit(){
+  return active().find(h=>h.type==='number' && h.name.trim().toLowerCase()==='weight');
+}
+function weightPoints(h){
+  return Object.keys(state.log).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort()
+    .map(k=>({k, d:parseKey(k), v: state.log[k][h.id]}))
+    .filter(p=>typeof p.v === 'number' && !isNaN(p.v));
+}
+/* Round a raw axis step up to a "nice" 1/2/5x10^n so gridlines land on
+   sensible values instead of arbitrary fractions. */
+function niceStep(range, targetTicks){
+  targetTicks = targetTicks || 5;
+  if(!(range > 0)) range = 1;
+  const rough = range / targetTicks;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  const step = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+  return step * mag;
+}
+
+function weightChart(h, pts){
+  const W = 600, H = 280, padL = 48, padR = 16, padT = 16, padB = 46;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const vals = pts.map(p=>p.v);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if(lo === hi){ lo -= 1; hi += 1; }
+  const step = niceStep(hi - lo, 5);
+  const niceLo = Math.floor(lo/step)*step, niceHi = Math.ceil(hi/step)*step;
+  const vRange = (niceHi - niceLo) || 1;
+
+  const t0 = pts[0].d.getTime(), t1 = pts[pts.length-1].d.getTime();
+  const tSpan = Math.max(1, t1 - t0);
+  const x = d => padL + ((d.getTime()-t0)/tSpan) * plotW;
+  const y = v => padT + plotH - ((v-niceLo)/vRange) * plotH;
+
+  let gridY = '', yLabs = '';
+  const ticksY = Math.round(vRange/step);
+  for(let i=0;i<=ticksY;i++){
+    const v = niceLo + i*step, yy = y(v);
+    gridY += '<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="var(--rule)" stroke-width="1"/>';
+    yLabs += '<text x="'+(padL-8)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end" class="axis-lab">'+fmt(Math.round(v*100)/100)+'</text>';
+  }
+
+  const ticksX = Math.max(1, Math.min(6, pts.length));
+  const showYear = tSpan > 300*86400000;
+  let xLabs = '';
+  for(let i=0;i<ticksX;i++){
+    const frac = ticksX===1 ? 0 : i/(ticksX-1);
+    const dd = new Date(t0 + frac*tSpan);
+    const xx = padL + frac*plotW;
+    const lab = MONTHS[dd.getMonth()].slice(0,3)+' '+dd.getDate()+(showYear ? " '"+String(dd.getFullYear()).slice(2) : '');
+    xLabs += '<text x="'+xx.toFixed(1)+'" y="'+(padT+plotH+16)+'" text-anchor="middle" class="axis-lab">'+lab+'</text>';
+  }
+
+  const line = pts.map((p,i)=>(i?'L':'M')+x(p.d).toFixed(1)+' '+y(p.v).toFixed(1)).join(' ');
+  const dots = pts.map(p=>'<circle cx="'+x(p.d).toFixed(1)+'" cy="'+y(p.v).toFixed(1)+'" r="2.4" fill="'+h.ink+'"><title>'
+    + pretty(p.k)+': '+fmt(p.v)+(h.unit?' '+esc(h.unit):'')+'</title></circle>').join('');
+
+  const axisBase = '<line x1="'+padL+'" y1="'+(padT+plotH)+'" x2="'+(W-padR)+'" y2="'+(padT+plotH)+'" stroke="var(--rule-2)" stroke-width="1"/>';
+  const xTitle = '<text x="'+(padL+plotW/2)+'" y="'+(H-6)+'" text-anchor="middle" class="axis-title">Date</text>';
+  const yTitle = '<text x="12" y="'+(padT+plotH/2)+'" text-anchor="middle" class="axis-title" transform="rotate(-90 12 '+(padT+plotH/2)+')">Weight'
+    + (h.unit ? ' ('+esc(h.unit)+')' : '') + '</text>';
+
+  return '<svg class="monthchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Weight over time, in '+esc(h.unit||'units')+'">'
+    + gridY + axisBase + yLabs + xLabs + xTitle + yTitle
+    + '<path d="'+line+'" fill="none" stroke="'+h.ink+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+    + dots + '</svg>';
+}
+
+function renderWeight(){
+  const h = weightHabit();
+  if(!h) return '<div class="empty"><p>No weight habit found.<br>Add a number habit named “Weight” on the Habits tab to see it graphed here.</p></div>';
+
+  const allPts = weightPoints(h);
+  if(!allPts.length) return '<div class="empty"><p>No weight logged yet.<br>Log a value from Today or Week to see your trend here.</p></div>';
+
+  const ranges = [{d:30,l:'1M'},{d:90,l:'3M'},{d:365,l:'1Y'},{d:0,l:'All'}];
+  const cutoff = weightRange ? addDays(today(), -weightRange) : null;
+  const pts = cutoff ? allPts.filter(p=>p.d>=cutoff) : allPts;
+
+  let html = '<div class="seg" style="margin-bottom:14px">' + ranges.map(r=>
+    '<button data-act="wRange" data-range="'+r.d+'" aria-pressed="'+(weightRange===r.d)+'">'+r.l+'</button>').join('') + '</div>';
+
+  if(!pts.length){
+    return html + '<div class="empty"><p>Nothing logged in this range.<br>Try a wider range.</p></div>';
+  }
+  if(pts.length < 2){
+    const only = pts[0];
+    html += '<div class="bookstats"><div class="bktile" style="--hi:'+h.ink+'"><b>'+fmt(only.v)+'</b><i>Current'+(h.unit?' ('+esc(h.unit)+')':'')+'</i></div></div>'
+      + '<div class="empty"><p>Only one entry in this range — log another day or widen the range to see a trend.</p></div>';
+    return html;
+  }
+
+  const vals = pts.map(p=>p.v);
+  const latest = pts[pts.length-1].v, first = pts[0].v;
+  const change = Math.round((latest-first)*100)/100;
+  const lo = Math.min(...vals), hiv = Math.max(...vals);
+
+  html += '<div class="bookstats">'
+    + '<div class="bktile" style="--hi:'+h.ink+'"><b>'+fmt(latest)+'</b><i>Current'+(h.unit?' ('+esc(h.unit)+')':'')+'</i></div>'
+    + '<div class="bktile" style="--hi:'+h.ink+'"><b>'+(change>0?'+':'')+fmt(change)+'</b><i>Change, this range</i></div>'
+    + '<div class="bktile" style="--hi:'+h.ink+'"><b>'+fmt(lo)+'</b><i>Low</i></div>'
+    + '<div class="bktile" style="--hi:'+h.ink+'"><b>'+fmt(hiv)+'</b><i>High</i></div>'
+    + '</div>'
+    + weightChart(h, pts);
+
+  return html;
+}
+
 function renderBooks(){
   const g = state.goodreads;
   const y = today().getFullYear();
@@ -1567,6 +1681,7 @@ function render(){
               : tab==='week'  ? renderWeek()
               : tab==='history' ? renderHistory()
               : tab==='stats' ? renderStats()
+              : tab==='weight' ? renderWeight()
               : tab==='books' ? renderBooks()
               : tab==='data'  ? renderData()
               : renderEdit();
@@ -1737,6 +1852,7 @@ view.addEventListener('click', e=>{
   if(act==='grRefresh'){ fetchGoodreads(true); return; }
   if(act==='grToggle'){ grOpen = !grIsOpen(); render(); return; }
   if(act==='chartToggle'){ booksChartOpen = !booksChartOpen; render(); return; }
+  if(act==='wRange'){ weightRange = Number(b.dataset.range); render(); return; }
   if(act==='add'){ addHabit(document.getElementById('newHabit').value); return; }
   if(act==='quick'){ addHabit(document.getElementById('quickAdd').value); return; }
 });
