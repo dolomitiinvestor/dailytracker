@@ -1001,9 +1001,11 @@ function longest(h){
   }
   return best;
 }
-function rate30(h){
+function rate30(h){ return rateN(h,30); }
+function rate365(h){ return rateN(h,365); }
+function rateN(h,n){
   let s=0, c=0;
-  for(let i=29;i>=0;i--){
+  for(let i=n-1;i>=0;i--){
     const d = addDays(today(),-i);
     if(scheduled(h,d)){ s++; if(done(h,key(d))) c++; }
   }
@@ -1230,11 +1232,12 @@ function renderStats(){
       const third = h.type==='number'
         ? '<span class="n"><b>'+(avg===null?'—':fmt(avg))+'</b><i>Avg</i></span>'
         : '<span class="n"><b>'+rate30(h)+'%</b><i>30 day</i></span>';
+      const fourth = h.type==='number' ? '' : '<span class="n"><b>'+rate365(h)+'%</b><i>365 day</i></span>';
       return '<div class="stat" style="--hi:'+h.ink+'"><div class="top">'
         + '<span class="nm">'+esc(h.emoji||'')+' '+esc(h.name)+'</span>'
         + '<span class="n"><b>'+streak(h)+'</b><i>Now</i></span>'
         + '<span class="n"><b>'+longest(h)+'</b><i>Best</i></span>'
-        + third + '</div>'
+        + third + fourth + '</div>'
         + (h.type==='number' ? sparkline(h) : '') + '</div>';
     }).join('');
   }
