@@ -346,28 +346,24 @@ input[type=number]{-moz-appearance:textfield}
 .xfer:focus{outline:0;border-color:var(--mimeo)}
 
 /* ---------- edit ---------- */
-.edit-item{border-bottom:1px dotted var(--rule-2);padding:16px 0}
+.edit-item{border-bottom:1px dotted var(--rule-2);padding:9px 0}
 .edit-item:last-of-type{border-bottom:0}
 .edit-top{display:flex;align-items:center;gap:8px}
-.name-in{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid var(--rule-2);padding:8px 2px;font-size:15.5px;font-weight:600}
+.name-in{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid var(--rule-2);padding:5px 2px;font-size:15.5px;font-weight:600}
 .name-in:focus{border-bottom-color:var(--mimeo);outline:0}
-.icon-btn{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-3);padding:8px 7px;border-radius:2px}
+.icon-btn{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-3);padding:5px 7px;border-radius:2px}
 .icon-btn:hover{color:var(--ink);background:rgba(255,255,255,.08)}
-.edit-bot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px}
-.inks{display:flex;gap:6px}
-.ink-dot{width:20px;height:20px;border-radius:50%;border:2px solid transparent}
-.ink-dot[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1.5px var(--stock) inset}
-.days{display:flex;gap:4px}
+.edit-bot{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;margin-top:7px}
+.days{display:flex;gap:3px}
 .day-btn{
-  width:26px;height:26px;border-radius:2px;font-family:'DM Mono',monospace;font-size:10.5px;
+  width:22px;height:22px;border-radius:2px;font-family:'DM Mono',monospace;font-size:9.5px;
   border:1px solid var(--rule-2);color:var(--ink-3);
 }
 .day-btn[aria-pressed="true"]{background:var(--ink);color:var(--stock);border-color:var(--ink)}
-.arch-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-left:auto;padding:5px 8px;border:1px solid var(--rule-2);border-radius:2px}
+.arch-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-left:auto;padding:4px 7px;border:1px solid var(--rule-2);border-radius:2px}
 .arch-btn:hover{color:var(--bad);border-color:var(--bad)}
-.type-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:11px}
 .seg{display:flex;border:1px solid var(--rule-2);border-radius:2px;overflow:hidden;flex:none}
-.seg button{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:7px 11px;color:var(--ink-3)}
+.seg button{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 9px;color:var(--ink-3)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--stock)}
 .mini{background:rgba(0,0,0,.3);border:1px solid var(--rule-2);border-radius:2px;padding:7px 8px;font-size:13px;font-family:'DM Mono',monospace;min-width:0}
 input.mini{width:84px}
@@ -447,7 +443,7 @@ select.mini{width:auto;font-size:11.5px;letter-spacing:.06em}
 <script>
 /* ---------------- data ---------------- */
 const KEY = 'daily-card-v1';
-const INKS = ['#8A7CE8','#E0645C','#3FAE9E','#9BB33C','#5C8AE6','#D99A3B'];
+const INKS = ['#8A7CE8'];
 const DOW = ['S','M','T','W','T','F','S'];
 const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -472,34 +468,34 @@ function starter(){
   const ALL = [0,1,2,3,4,5,6];
   return {habits:[
     {id:uid(), name:'Socialized', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Good attitude', emoji:'', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Focused/disciplined', emoji:'', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Frugal', emoji:'', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Extra career', emoji:'', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Groomed', emoji:'', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Good attitude', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Focused/disciplined', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Frugal', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Extra career', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Groomed', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
     {id:uid(), name:'Cleaned appt', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Speak up at work', emoji:'', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Journaled', emoji:'', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
-    {id:uid(), name:'Completed todo', emoji:'', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Read', emoji:'', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
-    {id:uid(), name:'Practiced voice', emoji:'', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Speak up at work', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Journaled', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Completed todo', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Read', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Practiced voice', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
     {id:uid(), name:'Morning stretch', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
-    {id:uid(), name:'Meditate', emoji:'', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
-    {id:uid(), name:'Vitamins', emoji:'', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
-    {id:uid(), name:'Flossed', emoji:'', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
-    {id:uid(), name:'Drinks', emoji:'', ink:INKS[4], days:ALL, type:'number', unit:'drinks', goal:null, goalDir:'max', slot:'evening', archived:false},
-    {id:uid(), name:'Coffees', emoji:'', ink:INKS[5], days:ALL, type:'number', unit:'coffees', goal:null, goalDir:'max', slot:'day', archived:false},
+    {id:uid(), name:'Meditate', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Vitamins', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'morning', archived:false},
+    {id:uid(), name:'Flossed', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Drinks', emoji:'', ink:INKS[0], days:ALL, type:'number', unit:'drinks', goal:null, goalDir:'max', slot:'evening', archived:false},
+    {id:uid(), name:'Coffees', emoji:'', ink:INKS[0], days:ALL, type:'number', unit:'coffees', goal:null, goalDir:'max', slot:'day', archived:false},
     {id:uid(), name:'No brainrot', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Cardio', emoji:'', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Lift', emoji:'', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Toe rehab', emoji:'', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Leg rehab', emoji:'', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Cardio', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Lift', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Toe rehab', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Leg rehab', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
     {id:uid(), name:'Abs', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Stretch', emoji:'', ink:INKS[1], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Sleep', emoji:'', ink:INKS[2], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
-    {id:uid(), name:'No junk food', emoji:'', ink:INKS[3], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
-    {id:uid(), name:'Bed hungry', emoji:'', ink:INKS[4], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
-    {id:uid(), name:'Went to bed at 1130', emoji:'', ink:INKS[5], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Stretch', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Sleep', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'No junk food', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false},
+    {id:uid(), name:'Bed hungry', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
+    {id:uid(), name:'Went to bed at 1130', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
     {id:uid(), name:'Weight', emoji:'', ink:INKS[0], days:ALL, type:'number', unit:'lbs', goal:null, goalDir:'min', slot:'morning', archived:false}
   ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0},
   goodreads:{url:'', items:[], lastFetch:0}, updated:Date.now()};
@@ -523,6 +519,7 @@ function normalize(s){
   if(!s.goodreads.lastFetch) s.goodreads.lastFetch = 0;
   if(!s.updated) s.updated = Date.now();
   s.habits.forEach(h=>{
+    h.ink = INKS[0];
     if(h.type !== 'number') h.type = 'check';
     if(typeof h.unit !== 'string') h.unit = '';
     if(h.goal === undefined) h.goal = null;
@@ -1356,15 +1353,12 @@ function editItem(h, i, groupLen){
       + '<button class="icon-btn" data-act="move" data-id="'+h.id+'" data-step="-1" aria-label="Move up"'+(i===0?' disabled style="opacity:.25"':'')+'>&uarr;</button>'
       + '<button class="icon-btn" data-act="move" data-id="'+h.id+'" data-step="1" aria-label="Move down"'+(i===groupLen-1?' disabled style="opacity:.25"':'')+'>&darr;</button>'
     + '</div>'
-    + '<div class="type-row">'
+    + '<div class="edit-bot">'
       + '<div class="seg">' + SLOTS.map(sl=>'<button data-act="slot" data-id="' + h.id + '" data-slot="' + sl.id
         + '" aria-pressed="' + (h.slot === sl.id) + '">' + SLOT_SHORT[sl.id] + '</button>').join('') + '</div>'
       + '<div class="seg"><button data-act="type" data-id="'+h.id+'" data-type="check" aria-pressed="'+(!num)+'">Tick off</button>'
       + '<button data-act="type" data-id="'+h.id+'" data-type="number" aria-pressed="'+num+'">Number</button></div>'
       + numFields
-    + '</div>'
-    + '<div class="edit-bot">'
-      + '<div class="inks">'+INKS.map(c=>'<button class="ink-dot" style="background:'+c+'" data-act="ink" data-id="'+h.id+'" data-ink="'+c+'" aria-pressed="'+(h.ink===c)+'" aria-label="Ink colour"></button>').join('')+'</div>'
       + '<div class="days">'+DOW.map((d,n)=>'<button class="day-btn" data-act="day" data-id="'+h.id+'" data-day="'+n+'" aria-pressed="'+h.days.includes(n)+'" aria-label="'+DOW_FULL[n]+'">'+d+'</button>').join('')+'</div>'
       + '<button class="arch-btn" data-act="archive" data-id="'+h.id+'">Archive</button>'
     + '</div></div>';
@@ -1741,7 +1735,7 @@ document.querySelector('.tabs').addEventListener('click', e=>{
 function addHabit(name){
   name = (name||'').trim();
   if(!name){ toast('Give the habit a name first.'); return; }
-  state.habits.push({id:uid(), name, emoji:'', ink:INKS[state.habits.length % INKS.length],
+  state.habits.push({id:uid(), name, emoji:'', ink:INKS[0],
     days:[0,1,2,3,4,5,6], type:'check', unit:'', goal:null, goalDir:'min', slot:'day', archived:false});
   persist(); render();
 }
@@ -1806,7 +1800,6 @@ view.addEventListener('click', e=>{
     persist(); render(); return;
   }
   if(act==='slot'){ h.slot = b.dataset.slot; persist(); render(); return; }
-  if(act==='ink'){ h.ink = b.dataset.ink; persist(); render(); return; }
   if(act==='day'){
     const d = Number(b.dataset.day);
     h.days = h.days.includes(d) ? h.days.filter(x=>x!==d) : h.days.concat(d).sort();
