@@ -303,6 +303,9 @@ input[type=number]{-moz-appearance:textfield}
 .miss{width:34px;height:34px;flex:none;border-radius:50%;border:1.5px solid var(--rule-2);
   color:var(--ink-3);font-size:15px;line-height:1;display:grid;place-items:center}
 .miss:hover{border-color:var(--bad);color:var(--bad)}
+.half{width:34px;height:34px;flex:none;border-radius:50%;border:1.5px solid var(--rule-2);
+  background:linear-gradient(90deg,var(--hi) 50%,transparent 50%);transition:border-color .15s}
+.half:hover{border-color:var(--hi)}
 .bad{--bad:#E0645C}
 
 /* ---------- settled ---------- */
@@ -311,6 +314,7 @@ input[type=number]{-moz-appearance:textfield}
 .settled .mk{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;
   font-family:'DM Mono',monospace;font-size:11px;color:var(--stock)}
 .settled .mk.y{background:var(--ink)}
+.settled .mk.h{background:linear-gradient(90deg,var(--hi) 50%,transparent 50%);border:1.5px solid var(--rule-2)}
 .settled .mk.n{background:var(--bad)}
 .settled .nm{flex:1;min-width:0;font-size:14.5px;color:var(--ink-2);word-break:break-word}
 .settled .nm s{text-decoration-color:var(--ink-3);opacity:.7}
@@ -335,6 +339,7 @@ input[type=number]{-moz-appearance:textfield}
 .dayrow .det div{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink-2)}
 .dayrow .det span{font-family:'DM Mono',monospace;font-size:11px;width:14px;flex:none;text-align:center}
 .dayrow .det .y{color:var(--good)}
+.dayrow .det .h{color:var(--mimeo)}
 .dayrow .det .n{color:var(--bad)}
 .dayrow .det .o{color:var(--ink-3)}
 .pen{font-family:'DM Mono',monospace;font-size:10px;color:var(--mimeo);flex:none}
@@ -948,12 +953,13 @@ function value(h,k){
 function logged(h,k){ return value(h,k) !== null; }
 function done(h,k){
   const v = value(h,k);
-  if(v === null || v === false) return false;
+  if(v === null || v === false || v === 'half') return false;
   if(h.type !== 'number') return true;
   if(typeof v !== 'number' || isNaN(v)) return false;
   if(h.goal === null || h.goal === '') return true;
   return h.goalDir === 'max' ? v <= h.goal : v >= h.goal;
 }
+const halfCredit = (h,k) => value(h,k) === 'half';
 function setValue(h,k,v){
   if(v === null){
     if(state.log[k]){ delete state.log[k][h.id]; if(!Object.keys(state.log[k]).length) delete state.log[k]; }
@@ -970,15 +976,17 @@ function toggleCheck(h,k){ setValue(h,k, done(h,k) ? null : true); }
 const settled = (h,k) => value(h,k) !== null;
 const failed  = (h,k) => value(h,k) === false;
 function markFail(h,k){ setValue(h,k, false); }
+function markHalf(h,k){ setValue(h,k, 'half'); }
 function unsettle(h,k){ setValue(h,k, null); }
 
 function dayScore(d){
   const due = active().filter(h=>scheduled(h,d));
   const k = key(d);
   const won = due.filter(h=>done(h,k)).length;
+  const half = due.filter(h=>halfCredit(h,k)).length;
   const lost = due.filter(h=>failed(h,k)).length;
-  return {due:due.length, done:won, failed:lost, open:due.length - won - lost,
-          pct: due.length ? Math.round(won/due.length*100) : null};
+  return {due:due.length, done:won, half, failed:lost, open:due.length - won - half - lost,
+          pct: due.length ? Math.round((won + half*0.5)/due.length*100) : null};
 }
 function bySlot(list){
   const out = {};
@@ -1090,22 +1098,27 @@ function todayRow(h,k){
       + 'aria-label="' + esc(h.name) + '"><span class="unit">' + esc(h.unit || 'today') + '</span></div>'
     : '<button class="slot" data-act="punch" data-id="' + h.id + '" data-k="' + k + '" '
       + 'aria-label="Mark ' + esc(h.name) + ' done"></button>';
+  const halfBtn = h.type === 'number' ? '' : '<button class="half" data-act="half" data-id="' + h.id + '" data-k="' + k + '" '
+    + 'aria-label="Mark ' + esc(h.name) + ' half credit"></button>';
 
   return '<div class="row" style="--hi:' + h.ink + '">'
     + '<div class="body"><div class="name">' + esc(h.name) + '</div><div class="meta">' + meta + '</div></div>'
     + '<div class="marks">'
     + '<button class="miss" data-act="fail" data-id="' + h.id + '" data-k="' + k + '" '
     + 'aria-label="Mark ' + esc(h.name) + ' missed">\u2715</button>'
+    + halfBtn
     + control + '</div></div>';
 }
 
 function settledRow(h,k){
-  const won = done(h,k), v = value(h,k);
+  const won = done(h,k), half = halfCredit(h,k), v = value(h,k);
+  const status = half ? 'h' : (won ? 'y' : 'n');
+  const glyph = half ? '' : (won ? '\u2713' : '\u2715');
   const val = (h.type === 'number' && typeof v === 'number')
     ? fmt(v) + (h.unit ? ' ' + esc(h.unit) : '') : '';
   return '<div class="settled">'
-    + '<span class="mk ' + (won ? 'y' : 'n') + '">' + (won ? '\u2713' : '\u2715') + '</span>'
-    + '<span class="nm">' + (won ? esc(h.name) : '<s>' + esc(h.name) + '</s>') + '</span>'
+    + '<span class="mk ' + status + '">' + glyph + '</span>'
+    + '<span class="nm">' + (won || half ? esc(h.name) : '<s>' + esc(h.name) + '</s>') + '</span>'
     + (val ? '<span class="val">' + val + '</span>' : '')
     + '<button class="undo" data-act="undo" data-id="' + h.id + '" data-k="' + k + '">Undo</button></div>';
 }
@@ -1144,7 +1157,7 @@ function renderToday(){
   }else if(due.length){
     const sc = dayScore(t);
     html += '<div class="empty"><p>Card complete \u2014 ' + sc.done + ' of ' + sc.due + ' punched.<br>'
-          + (sc.failed ? 'Tomorrow is a fresh card.' : 'Clean sweep.') + '</p></div>';
+          + (sc.failed ? 'Tomorrow is a fresh card.' : sc.half ? 'Partial credit today.' : 'Clean sweep.') + '</p></div>';
   }else{
     html += '<div class="empty"><p>Nothing scheduled for ' + DOW_FULL[t.getDay()] + '.<br>A rest day is still a day on plan.</p></div>';
   }
@@ -1319,9 +1332,9 @@ function renderHistory(){
     if(open){
       const due = active().filter(h=>scheduled(h,d));
       body += '<div class="det">' + (due.length ? due.map(h=>{
-        const won = done(h,k), lost = failed(h,k), v = value(h,k);
-        const cls = won ? 'y' : lost ? 'n' : 'o';
-        const glyph = won ? '\u2713' : lost ? '\u2715' : '\u00B7';
+        const won = done(h,k), lost = failed(h,k), half = halfCredit(h,k), v = value(h,k);
+        const cls = won ? 'y' : half ? 'h' : lost ? 'n' : 'o';
+        const glyph = won ? '\u2713' : half ? '\u25D1' : lost ? '\u2715' : '\u00B7';
         const val = (h.type === 'number' && typeof v === 'number')
           ? ' \u00B7 ' + fmt(v) + (h.unit ? ' ' + esc(h.unit) : '') : '';
         return '<div><span class="' + cls + '">' + glyph + '</span>'
@@ -1760,6 +1773,10 @@ view.addEventListener('click', e=>{
   }
   if(act==='fail'){
     markFail(h, b.dataset.k);
+    render(); return;
+  }
+  if(act==='half'){
+    markHalf(h, b.dataset.k);
     render(); return;
   }
   if(act==='undo'){
