@@ -359,7 +359,12 @@ input[type=number]{-moz-appearance:textfield}
 .icon-btn{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-3);padding:5px 7px;border-radius:2px}
 .icon-btn:hover{color:var(--ink);background:rgba(255,255,255,.08)}
 .edit-bot{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;margin-top:7px}
-.days{display:flex;gap:3px}
+.days-chip{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);border:1px solid var(--rule-2);border-radius:2px;padding:4.5px 8px;flex:none}
+.days-chip:hover{color:var(--ink);border-color:var(--ink-2)}
+.days-chip[aria-expanded="true"]{color:var(--ink);border-color:var(--hi)}
+.days{display:flex;gap:3px;animation:daysPop .14s ease-out}
+@keyframes daysPop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
 .day-btn{
   width:22px;height:22px;border-radius:2px;font-family:'DM Mono',monospace;font-size:9.5px;
   border:1px solid var(--rule-2);color:var(--ink-3);
@@ -465,6 +470,7 @@ let focusNext = null;
 let saveTimer = null;
 let grOpen = null;        // Goodreads panel expanded; null = auto (open until a link is saved)
 let booksChartOpen = false; // monthly books/pages chart expanded
+const daysOpen = new Set(); // habit ids with the day-of-week picker popped out
 let weightRange = 90;     // days shown on the Weight chart; 0 = all time
 
 function uid(){ return 'h' + Math.random().toString(36).slice(2,9); }
@@ -1350,6 +1356,14 @@ function renderHistory(){
 }
 
 /* ---------------- edit ---------------- */
+function daySummary(days){
+  if(days.length === 7) return 'Every day';
+  if(days.length === 5 && [1,2,3,4,5].every(d=>days.includes(d))) return 'Weekdays';
+  if(days.length === 2 && [0,6].every(d=>days.includes(d))) return 'Weekends';
+  if(!days.length) return 'No days';
+  return days.slice().sort((a,b)=>a-b).map(d=>DOW[d]).join(' ');
+}
+
 function editItem(h, i, groupLen){
   const num = h.type === 'number';
   const numFields = num
@@ -1360,6 +1374,9 @@ function editItem(h, i, groupLen){
       + '<option value="none"'+(h.goal===null?' selected':'')+'>No target</option></select>'
       + (h.goal===null ? '' : '<input class="mini" type="number" step="any" value="'+h.goal+'" placeholder="target" data-act="goal" data-id="'+h.id+'" aria-label="Target number">')
     : '';
+  const daysIsOpen = daysOpen.has(h.id);
+  const daysUi = '<button class="days-chip" data-act="daysToggle" data-id="'+h.id+'" aria-expanded="'+daysIsOpen+'" aria-label="Days scheduled">'+esc(daySummary(h.days))+'</button>'
+    + (daysIsOpen ? '<div class="days">'+DOW.map((d,n)=>'<button class="day-btn" data-act="day" data-id="'+h.id+'" data-day="'+n+'" aria-pressed="'+h.days.includes(n)+'" aria-label="'+DOW_FULL[n]+'">'+d+'</button>').join('')+'</div>' : '');
   return '<div class="edit-item" style="--hi:'+h.ink+'">'
     + '<div class="edit-top">'
       + '<input class="name-in" value="'+esc(h.name)+'" data-act="name" data-id="'+h.id+'" aria-label="Habit name">'
@@ -1372,7 +1389,7 @@ function editItem(h, i, groupLen){
       + '<div class="seg"><button data-act="type" data-id="'+h.id+'" data-type="check" aria-pressed="'+(!num)+'">Tick off</button>'
       + '<button data-act="type" data-id="'+h.id+'" data-type="number" aria-pressed="'+num+'">Number</button></div>'
       + numFields
-      + '<div class="days">'+DOW.map((d,n)=>'<button class="day-btn" data-act="day" data-id="'+h.id+'" data-day="'+n+'" aria-pressed="'+h.days.includes(n)+'" aria-label="'+DOW_FULL[n]+'">'+d+'</button>').join('')+'</div>'
+      + daysUi
       + '<button class="arch-btn" data-act="archive" data-id="'+h.id+'">Archive</button>'
     + '</div></div>';
 }
@@ -1817,6 +1834,10 @@ view.addEventListener('click', e=>{
     persist(); render(); return;
   }
   if(act==='slot'){ h.slot = b.dataset.slot; persist(); render(); return; }
+  if(act==='daysToggle'){
+    if(daysOpen.has(h.id)) daysOpen.delete(h.id); else daysOpen.add(h.id);
+    render(); return;
+  }
   if(act==='day'){
     const d = Number(b.dataset.day);
     h.days = h.days.includes(d) ? h.days.filter(x=>x!==d) : h.days.concat(d).sort();
