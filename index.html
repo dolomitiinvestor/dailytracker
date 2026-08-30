@@ -876,26 +876,38 @@ function disconnect(){
 
 /* ---------------- goodreads ---------------- */
 /* Goodreads sends no CORS headers, so a browser can't read the feed directly —
-   it has to go through a public read-only mirror that adds them. Two mirrors
-   are tried in turn since either can be flaky or rate-limited on its own. */
+   it has to go through a public read-only mirror that adds them. Several
+   mirrors are tried in turn since any one of them can be flaky, rate-limited,
+   or down for stretches at a time. */
 const CORS_PROXIES = [
   url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-  url => 'https://corsproxy.io/?url=' + encodeURIComponent(url)
+  url => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
+  url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
+  url => 'https://thingproxy.freeboard.io/fetch/' + url
 ];
 let grFetching = false, grError = '';
+
+async function fetchWithTimeout(u, ms){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), ms);
+  try{ return await fetch(u, {signal: ctrl.signal}); }
+  finally{ clearTimeout(timer); }
+}
 
 async function fetchViaProxies(url){
   let lastErr;
   for(const build of CORS_PROXIES){
     try{
-      const r = await fetch(build(url));
+      const r = await fetchWithTimeout(build(url), 12000);
       if(!r.ok) throw new Error('status ' + r.status);
       const text = await r.text();
       if(!text || text.length < 20) throw new Error('empty response');
       return text;
-    }catch(e){ lastErr = e; }
+    }catch(e){
+      lastErr = (e && e.name === 'AbortError') ? new Error('timed out') : e;
+    }
   }
-  throw new Error('Could not reach Goodreads through either relay — try again in a bit. (' + (lastErr && lastErr.message) + ')');
+  throw new Error('Could not reach Goodreads through any relay — try again in a bit. (' + (lastErr && lastErr.message) + ')');
 }
 
 function parseGoodreadsRss(text){
@@ -1427,7 +1439,7 @@ function renderEdit(){
 }
 
 /* ---------------- books tab ---------------- */
-function grIsOpen(){ return grOpen === null ? !state.goodreads.url : grOpen; }
+function grIsOpen(){ return grOpen === null ? (!state.goodreads.url || !!grError) : grOpen; }
 
 function booksMonthlyChart(){
   const y = today().getFullYear();
