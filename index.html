@@ -134,14 +134,7 @@ input[type=number]{-moz-appearance:textfield}
 .slot.on{
   border:0;background:var(--desk);color:transparent;
   box-shadow:inset 0 3px 5px rgba(0,0,0,.95), 0 0 0 2.5px var(--hi), 0 1px 0 rgba(255,255,255,.4);
-  animation:punch .22s ease-out;
 }
-@keyframes punch{0%{transform:scale(.72)}60%{transform:scale(1.09)}100%{transform:scale(1)}}
-.chad{
-  position:absolute;inset:6px;border-radius:50%;background:var(--stock);
-  pointer-events:none;animation:chad .5s ease-in forwards;
-}
-@keyframes chad{to{transform:translateY(38px) rotate(52deg);opacity:0}}
 
 /* ---------- number field ---------- */
 .numwrap{flex:none;width:84px;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -420,7 +413,6 @@ select.mini{width:auto;font-size:11.5px;letter-spacing:.06em}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
-  .chad{display:none}
 }
 </style>
 </head>
@@ -511,7 +503,7 @@ function starter(){
     {id:uid(), name:'Bed hungry', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
     {id:uid(), name:'Went to bed at 1130', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
     {id:uid(), name:'Weight', emoji:'', ink:INKS[0], days:ALL, type:'number', unit:'lbs', goal:null, goalDir:'min', slot:'morning', archived:false}
-  ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0},
+  ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0, lastPull:0},
   goodreads:{url:'', items:[], lastFetch:0}, updated:Date.now()};
 }
 
@@ -526,6 +518,7 @@ function normalize(s){
   if(typeof st.gistId !== 'string') st.gistId = '';
   if(st.auto === undefined) st.auto = true;
   if(!st.lastSync) st.lastSync = 0;
+  if(!st.lastPull) st.lastPull = 0;
   if(!st.provider) st.provider = st.clientId ? 'drive' : 'none';
   if(!s.goodreads || typeof s.goodreads !== 'object') s.goodreads = {};
   if(typeof s.goodreads.url !== 'string') s.goodreads.url = '';
@@ -848,6 +841,59 @@ async function sync(interactive){
   }catch(e){
     syncing = false;
     lastError = e.message || 'Sync failed.';
+    if(isAuthFailure(lastError)) state.settings.linked = false;
+    writeLocal();
+    if(interactive){ toast(lastError); render(); }
+    else if(tab === 'data') render();
+  }
+}
+
+/* Explicit pull: bring the remote copy down and merge it into this device,
+   but don't push back. Lets you check what the other device has before
+   deciding whether to overwrite it. */
+async function pullOnly(interactive){
+  const p = provider();
+  if(syncing || p === 'none' || !hasCreds()) return;
+  syncing = true;
+  if(tab === 'data') render();
+  try{
+    const remote = p === 'gist' ? await ghPull() : await drivePull(interactive);
+    if(remote && Array.isArray(remote.habits)){ state = merge(state, remote); dirty = true; }
+    state.settings.linked = true;
+    state.settings.lastPull = Date.now();
+    lastError = '';
+    writeLocal();
+    syncing = false; render();
+    if(interactive) toast(remote ? 'Pulled the other device’s card in.' : 'Nothing out there to pull yet.');
+  }catch(e){
+    syncing = false;
+    lastError = e.message || 'Pull failed.';
+    if(isAuthFailure(lastError)) state.settings.linked = false;
+    writeLocal();
+    if(interactive){ toast(lastError); render(); }
+    else if(tab === 'data') render();
+  }
+}
+
+/* Explicit push: send this device's card up as-is, without pulling first.
+   Use after a pull (and any edits) to make this device the source of truth. */
+async function pushOnly(interactive){
+  const p = provider();
+  if(syncing || p === 'none' || !hasCreds()) return;
+  syncing = true;
+  if(tab === 'data') render();
+  try{
+    state.settings.linked = true;
+    state.settings.lastSync = Date.now();
+    const outgoing = Object.assign({}, state, {settings: undefined});
+    if(p === 'gist') await ghPush(outgoing); else await drivePush(outgoing, interactive);
+    dirty = false; lastError = '';
+    writeLocal();
+    syncing = false; render();
+    if(interactive) toast('Pushed this device’s card up.');
+  }catch(e){
+    syncing = false;
+    lastError = e.message || 'Push failed.';
     if(isAuthFailure(lastError)) state.settings.linked = false;
     writeLocal();
     if(interactive){ toast(lastError); render(); }
@@ -1690,14 +1736,17 @@ function renderData(){
   let statusCls = 'status', statusTxt;
   if(syncing){ statusTxt = 'Syncing…'; }
   else if(lastError){ statusCls += ' warn'; statusTxt = lastError; }
-  else if(connected() && dirty){ statusCls += ' live'; statusTxt = 'Changes waiting to go up'; }
+  else if(connected() && dirty){ statusCls += ' live'; statusTxt = 'Changes waiting — tap Push now'; }
   else if(connected()){ statusCls += ' live'; statusTxt = last ? 'Last synced ' + last.toLocaleString() : 'Connected'; }
   else if(hasCreds()){ statusCls += ' warn'; statusTxt = 'Not connected yet — tap Connect'; }
   else { statusTxt = 'Sync is off — this device only'; }
 
   const p = provider();
-  const actions = '<button class="btn solid" data-act="connect">' + (connected() ? 'Sync now' : 'Connect') + '</button>'
-    + (connected() ? '<button class="btn" data-act="disconnect">Disconnect</button>' : '');
+  const actions = connected()
+    ? '<button class="btn solid" data-act="pushNow">Push now</button>'
+      + '<button class="btn solid" data-act="pullNow">Pull now</button>'
+      + '<button class="btn" data-act="disconnect">Disconnect</button>'
+    : '<button class="btn solid" data-act="connect">Connect</button>';
 
   let body;
   if(p === 'gist'){
@@ -1706,14 +1755,14 @@ function renderData(){
       + 'No project setup, no origins, no approval screens.</p>'
       + '<div class="er"><input type="text" id="ghToken" placeholder="ghp_… or github_pat_…" value="' + esc(s.token||'') + '" spellcheck="false" aria-label="GitHub token">'
       + actions + '</div>'
-      + '<label class="toggle"><input type="checkbox" data-act="auto"' + (s.auto ? ' checked' : '') + '>Sync automatically after changes</label>'
+      + '<label class="toggle"><input type="checkbox" data-act="auto"' + (s.auto ? ' checked' : '') + '>Auto pull-and-push after changes</label>'
       + '<p style="margin:14px 0 0;font-size:12.5px">The token is stored in this browser, so give it the gist permission and nothing else. '
       + 'You can revoke it from GitHub at any time, and paste the same one on your other devices.</p>';
   }else if(p === 'drive'){
     body = '<p>Keeps your card in a private folder in your own Google Drive. Needs a client ID from a Google Cloud project — the fiddlier of the two options.</p>'
       + '<div class="er"><input type="text" id="clientId" placeholder="xxxxx.apps.googleusercontent.com" value="' + esc(s.clientId||'') + '" spellcheck="false" aria-label="Google client ID">'
       + actions + '</div>'
-      + '<label class="toggle"><input type="checkbox" data-act="auto"' + (s.auto ? ' checked' : '') + '>Sync automatically after changes</label>'
+      + '<label class="toggle"><input type="checkbox" data-act="auto"' + (s.auto ? ' checked' : '') + '>Auto pull-and-push after changes</label>'
       + '<p style="margin:14px 0 0;font-size:12.5px">This exact address must be listed under <b>Authorized JavaScript origins</b> — no trailing slash, no page path:</p>'
       + '<div class="er" style="margin-top:8px"><code class="origin">' + esc(location.origin) + '</code>'
       + '<button class="btn" data-act="copyOrigin">Copy</button></div>';
@@ -1744,7 +1793,8 @@ function renderData(){
     + body
     + '<div class="' + statusCls + '"><span class="dot"></span>' + esc(statusTxt) + '</div>'
     + (p !== 'none' ? '<p style="margin:10px 0 0;font-size:12px;color:var(--ink-3)">'
-        + 'This device last pushed ' + (s.lastSync ? new Date(s.lastSync).toLocaleString() : 'never')
+        + 'Last pushed ' + (s.lastSync ? new Date(s.lastSync).toLocaleString() : 'never')
+        + ' \u00B7 last pulled ' + (s.lastPull ? new Date(s.lastPull).toLocaleString() : 'never')
         + (s.gistId ? ' \u00B7 gist ' + esc(String(s.gistId).slice(0,8)) + '\u2026' : ' \u00B7 no gist yet')
         + '</p>' : '')
     + '</div>'
@@ -1793,14 +1843,7 @@ view.addEventListener('click', e=>{
   const h = state.habits.find(x=>x.id===b.dataset.id);
 
   if(act==='punch'){
-    const wasOn = b.classList.contains('on');
     toggleCheck(h, b.dataset.k);
-    if(!wasOn && b.classList.contains('slot')){
-      const chad = document.createElement('span'); chad.className='chad';
-      b.appendChild(chad); setTimeout(()=>chad.remove(),520);
-      b.classList.add('on'); b.setAttribute('aria-pressed','true');
-      renderMast(); setTimeout(render,190); return;
-    }
     render(); return;
   }
   if(act==='fail'){
@@ -1940,6 +1983,8 @@ view.addEventListener('click', e=>{
     else toast(o);
     return;
   }
+  if(act==='pushNow'){ pushOnly(true); return; }
+  if(act==='pullNow'){ pullOnly(true); return; }
   if(act==='disconnect'){ disconnect(); return; }
   if(act==='grRefresh'){ fetchGoodreads(true); return; }
   if(act==='grToggle'){ grOpen = !grIsOpen(); render(); return; }
@@ -1975,7 +2020,7 @@ view.addEventListener('change', e=>{
   }
   if(el.dataset.act === 'auto'){
     state.settings.auto = el.checked; persist();
-    toast(el.checked ? 'Auto-sync on.' : 'Auto-sync off — use Sync now.');
+    toast(el.checked ? 'Auto-sync on.' : 'Auto-sync off — use Push now / Pull now.');
     return;
   }
   if(el.dataset.act === 'goalDir'){
@@ -2011,17 +2056,17 @@ document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && !edit
   if('serviceWorker' in navigator){
     window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   }
-  if(hasCreds()) sync(false);
+  if(hasCreds() && cfg().auto) sync(false);
 
   let awayAt = Date.now();
   document.addEventListener('visibilitychange', ()=>{
     if(document.hidden){ awayAt = Date.now(); flushSync(); return; }
-    if(!hasCreds()) return;
+    if(!hasCreds() || !cfg().auto) return;
     if(dirty || Date.now() - awayAt > 45000) sync(false);
   });
   window.addEventListener('pagehide', flushSync);
   window.addEventListener('blur', flushSync);
-  window.addEventListener('online', ()=>{ if(hasCreds()) sync(false); });
+  window.addEventListener('online', ()=>{ if(hasCreds() && cfg().auto) sync(false); });
 })();
 </script>
 </body>
