@@ -540,7 +540,9 @@ function normalize(s){
 /* ---------------- dates ---------------- */
 function key(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function addDays(d,n){ const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()+n); return x; }
-function today(){ const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
+/* The day rolls over at 2am, not midnight, so late-night entries land on the prior day. */
+const DAY_START_HOUR = 2;
+function today(){ const n=new Date(); if(n.getHours()<DAY_START_HOUR) n.setDate(n.getDate()-1); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
 function parseKey(k){ const p=k.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
 function pretty(k){ const d=parseKey(k); return DOW_FULL[d.getDay()].slice(0,3)+' '+MONTHS[d.getMonth()].slice(0,3)+' '+d.getDate(); }
 
