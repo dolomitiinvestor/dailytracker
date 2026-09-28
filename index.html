@@ -436,6 +436,7 @@ select.mini{width:auto;font-size:11.5px;letter-spacing:.06em}
       <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
       <button class="tab" role="tab" data-tab="weight" aria-selected="false">Weight</button>
       <button class="tab" role="tab" data-tab="books" aria-selected="false">Books</button>
+      <button class="tab" role="tab" data-tab="haircut" aria-selected="false">Haircut</button>
       <button class="tab" role="tab" data-tab="edit" aria-selected="false">Habits</button>
       <button class="tab" role="tab" data-tab="data" aria-selected="false">Data</button>
     </nav>
@@ -504,7 +505,7 @@ function starter(){
     {id:uid(), name:'Went to bed at 1130', emoji:'', ink:INKS[0], days:ALL, type:'check', unit:'', goal:null, goalDir:'min', slot:'evening', archived:false},
     {id:uid(), name:'Weight', emoji:'', ink:INKS[0], days:ALL, type:'number', unit:'lbs', goal:null, goalDir:'min', slot:'morning', archived:false}
   ], log:{}, notes:{}, settings:{provider:'none', clientId:'', token:'', gistId:'', linked:false, auto:true, lastSync:0, lastPull:0},
-  goodreads:{url:'', items:[], lastFetch:0}, updated:Date.now()};
+  goodreads:{url:'', items:[], lastFetch:0}, haircut:{last:'', updated:0}, updated:Date.now()};
 }
 
 function normalize(s){
@@ -524,6 +525,9 @@ function normalize(s){
   if(typeof s.goodreads.url !== 'string') s.goodreads.url = '';
   if(!Array.isArray(s.goodreads.items)) s.goodreads.items = [];
   if(!s.goodreads.lastFetch) s.goodreads.lastFetch = 0;
+  if(!s.haircut || typeof s.haircut !== 'object') s.haircut = {};
+  if(typeof s.haircut.last !== 'string') s.haircut.last = '';
+  if(!s.haircut.updated) s.haircut.updated = 0;
   if(!s.updated) s.updated = Date.now();
   s.habits.forEach(h=>{
     h.ink = INKS[0];
@@ -575,6 +579,7 @@ function merge(a,b){
   const older = newer === a ? b : a;
   const out = {habits:[], log:{}, notes:{}, settings: a.settings || b.settings || {},
                goodreads: newer.goodreads || older.goodreads || null,
+               haircut: ((b.haircut&&b.haircut.updated)||0) >= ((a.haircut&&a.haircut.updated)||0) ? b.haircut : a.haircut,
                updated: Math.max(a.updated||0, b.updated||0)};
 
   /* Build the habit list from the newer side first, then fold in the older
@@ -613,7 +618,7 @@ function merge(a,b){
 
 /* ---------------- transfer code ---------------- */
 function payload(){
-  return {habits: state.habits, log: state.log, notes: state.notes, updated: state.updated};
+  return {habits: state.habits, log: state.log, notes: state.notes, haircut: state.haircut, updated: state.updated};
 }
 function encodeCode(){
   const json = JSON.stringify(payload());
@@ -1534,6 +1539,21 @@ function booksMonthlyChart(){
     + '<div style="margin-top:8px">' + monthRows + '</div>';
 }
 
+/* ---------------- haircut tab ---------------- */
+function renderHaircut(){
+  const last = state.haircut.last;
+  let big = '\u2014', sub = 'No haircut logged yet';
+  if(last){
+    const n = Math.round((today() - parseKey(last)) / 86400000);
+    big = String(n);
+    sub = (n===1 ? 'day' : 'days') + ' since your last haircut \u00b7 ' + pretty(last);
+  }
+  return '<div class="empty">'
+    + '<div style="font-family:\'DM Mono\',monospace;font-size:72px;line-height:1;color:var(--hi);margin-bottom:12px">' + big + '</div>'
+    + '<p style="margin-bottom:22px">' + sub + '</p>'
+    + '<button class="btn solid" data-act="haircut">Got a haircut</button></div>';
+}
+
 /* ---------------- weight tab ---------------- */
 function weightHabit(){
   return active().find(h=>h.type==='number' && h.name.trim().toLowerCase()==='weight');
@@ -1816,6 +1836,7 @@ function render(){
               : tab==='stats' ? renderStats()
               : tab==='weight' ? renderWeight()
               : tab==='books' ? renderBooks()
+              : tab==='haircut' ? renderHaircut()
               : tab==='data'  ? renderData()
               : renderEdit();
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
@@ -1991,6 +2012,10 @@ view.addEventListener('click', e=>{
   if(act==='grRefresh'){ fetchGoodreads(true); return; }
   if(act==='grToggle'){ grOpen = !grIsOpen(); render(); return; }
   if(act==='chartToggle'){ booksChartOpen = !booksChartOpen; render(); return; }
+  if(act==='haircut'){
+    state.haircut = {last: key(today()), updated: Date.now()};
+    persist(); render(); toast('Haircut logged. Count reset to 0.'); return;
+  }
   if(act==='wRange'){ weightRange = Number(b.dataset.range); render(); return; }
   if(act==='add'){ addHabit(document.getElementById('newHabit').value); return; }
   if(act==='quick'){ addHabit(document.getElementById('quickAdd').value); return; }
