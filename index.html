@@ -467,6 +467,7 @@ let saveTimer = null;
 let grOpen = null;        // Goodreads panel expanded; null = auto (open until a link is saved)
 let booksChartOpen = false; // monthly books/pages chart expanded
 const daysOpen = new Set(); // habit ids with the day-of-week picker popped out
+let haircutConfirm = false; // "Got a haircut" tapped once, waiting for Yes/Cancel
 let weightRange = 90;     // days shown on the Weight chart; 0 = all time
 
 function uid(){ return 'h' + Math.random().toString(36).slice(2,9); }
@@ -1551,7 +1552,13 @@ function renderHaircut(){
   return '<div class="empty">'
     + '<div style="font-family:\'DM Mono\',monospace;font-size:72px;line-height:1;color:var(--hi);margin-bottom:12px">' + big + '</div>'
     + '<p style="margin-bottom:22px">' + sub + '</p>'
-    + '<button class="btn solid" data-act="haircut">Got a haircut</button></div>';
+    + (haircutConfirm
+      ? '<p style="margin-bottom:12px">Reset the count to 0?</p>'
+        + '<div style="display:flex;gap:8px;justify-content:center">'
+        + '<button class="btn solid" data-act="haircutYes">Yes, reset</button>'
+        + '<button class="btn" data-act="haircutNo">Cancel</button></div>'
+      : '<button class="btn solid" data-act="haircut">Got a haircut</button>')
+    + '</div>';
 }
 
 /* ---------------- weight tab ---------------- */
@@ -1847,7 +1854,7 @@ function render(){
 /* ---------------- events ---------------- */
 document.querySelector('.tabs').addEventListener('click', e=>{
   const b = e.target.closest('.tab'); if(!b) return;
-  tab = b.dataset.tab; editing = null; render();
+  tab = b.dataset.tab; editing = null; haircutConfirm = false; render();
 });
 
 function addHabit(name){
@@ -2012,7 +2019,10 @@ view.addEventListener('click', e=>{
   if(act==='grRefresh'){ fetchGoodreads(true); return; }
   if(act==='grToggle'){ grOpen = !grIsOpen(); render(); return; }
   if(act==='chartToggle'){ booksChartOpen = !booksChartOpen; render(); return; }
-  if(act==='haircut'){
+  if(act==='haircut'){ haircutConfirm = true; render(); return; }
+  if(act==='haircutNo'){ haircutConfirm = false; render(); return; }
+  if(act==='haircutYes'){
+    haircutConfirm = false;
     state.haircut = {last: key(today()), updated: Date.now()};
     persist(); render(); toast('Haircut logged. Count reset to 0.'); return;
   }
