@@ -1,7 +1,7 @@
 /* Daily Card service worker — offline shell only. Your data never passes through here. */
-const V = 'daily-card-v11';
+const V = 'daily-card-v12';
 const CORE = ['./', './index.html', './manifest.webmanifest',
-              './icon-192.png?v=2', './icon-512.png?v=2', './icon-maskable.png?v=2', './apple-touch-icon.png?v=2'];
+              './icon-192.png?v=3', './icon-512.png?v=3', './icon-maskable.png?v=3', './apple-touch-icon.png?v=3'];
 
 /* Never touch auth or Drive traffic. */
 const BYPASS = ['accounts.google.com', 'www.googleapis.com', 'oauth2.googleapis.com', 'apis.google.com'];
