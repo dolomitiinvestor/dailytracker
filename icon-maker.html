@@ -12,12 +12,12 @@
   --desk:#161A19; --stock:#D8D4C3; --stock-2:#E5E2D4;
   --ink:#1C211F; --ink-2:#4B534E; --ink-3:#7C837D;
   --rule:rgba(28,33,31,.16); --rule-2:rgba(28,33,31,.30);
-  --mimeo:#4A3D8F;
+  --mimeo:#1F7A55;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:var(--desk);
-  background-image:radial-gradient(circle at 20% 0%, rgba(74,61,143,.18), transparent 55%);
+  background-image:radial-gradient(circle at 20% 0%, rgba(31,122,85,.18), transparent 55%);
   color:var(--ink);font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
   padding:26px 16px 60px;display:flex;justify-content:center;min-height:100vh;
 }
@@ -90,7 +90,7 @@ button{background:none;border:0;cursor:pointer}
 .drop{border:1.5px dashed var(--rule-2);border-radius:3px;padding:22px;text-align:center;
       font-family:'DM Mono',monospace;font-size:11.5px;letter-spacing:.06em;color:var(--ink-3);
       line-height:1.7;transition:border-color .15s,background .15s}
-.drop.over{border-color:var(--mimeo);background:rgba(74,61,143,.07);color:var(--ink)}
+.drop.over{border-color:var(--mimeo);background:rgba(31,122,85,.07);color:var(--ink)}
 
 .files{display:flex;flex-direction:column;gap:1px;margin-top:4px}
 .file{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dotted var(--rule-2)}
@@ -199,7 +199,7 @@ code{font-family:'DM Mono',monospace;font-size:12.5px;background:rgba(28,33,31,.
 </div>
 
 <script>
-const BGS = ['#161A19','#4A3D8F','#A6322F','#17605C','#23407A','#9A5A16','#D8D4C3','#FFFFFF'];
+const BGS = ['#0E3B2C','#161A19','#4A3D8F','#A6322F','#17605C','#23407A','#9A5A16','#D8D4C3','#FFFFFF'];
 const OUT = [
   {name:'apple-touch-icon.png', size:180, inset:0,    note:'iPhone and iPad home screen'},
   {name:'icon-192.png',         size:192, inset:0,    note:'Android home screen, browser tab'},
@@ -207,7 +207,7 @@ const OUT = [
   {name:'icon-maskable.png',    size:512, inset:0.14, note:'Android adaptive shapes — extra margin'}
 ];
 
-const st = {mode:'image', img:null, emoji:'', text:'', bg:'#161A19', fg:'#D8D4C3',
+const st = {mode:'image', img:null, emoji:'', text:'', bg:'#0E3B2C', fg:'#D8D4C3',
             zoom:1, pad:0, x:0, y:0};
 
 const $ = id => document.getElementById(id);
@@ -285,7 +285,7 @@ $('files').innerHTML = OUT.map((o,i)=>
 
 $('swatches').innerHTML = BGS.map(c=>
   '<button class="sw" style="background:' + c + '" data-bg="' + c + '" aria-pressed="' + (c===st.bg) + '" aria-label="Background ' + c + '"></button>').join('')
-  + '<button class="sw custom" aria-label="Custom background"><input type="color" id="bgColor" value="#161A19"></button>';
+  + '<button class="sw custom" aria-label="Custom background"><input type="color" id="bgColor" value="#0E3B2C"></button>';
 
 document.addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
