@@ -142,11 +142,12 @@ input[type=number]{-moz-appearance:textfield}
   width:84px;height:42px;text-align:center;border-radius:3px;
   font-family:'DM Mono',monospace;font-size:15.5px;
   background:rgba(0,0,0,.28);border:1.5px dashed var(--rule-2);
+  color:var(--ink);-webkit-text-fill-color:var(--ink);caret-color:var(--ink);
 }
 .field::placeholder{color:var(--ink-3);font-size:13px}
 .field:focus{outline:0;border-style:solid;border-color:var(--hi);background:rgba(0,0,0,.42)}
 .field.met{
-  color:var(--stock-2);background:var(--desk);border:0;
+  color:var(--ink);background:var(--desk);border:0;
   box-shadow:inset 0 3px 5px rgba(0,0,0,.95), 0 0 0 2.5px var(--hi), 0 1px 0 rgba(255,255,255,.4);
 }
 .unit{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:center;line-height:1.2}
@@ -293,6 +294,10 @@ input[type=number]{-moz-appearance:textfield}
 .slot-head:first-child{margin-top:4px}
 .slot-head .ct{color:var(--ink-2)}
 .slot-head::after{content:'';flex:1;height:1px;background:var(--rule)}
+.cat-head{margin:12px 0 2px 2px;font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-2)}
+.cat-head .ct{color:var(--ink-3);margin-left:6px}
+input.mini.cat-in{width:110px}
 
 /* ---------- pass / fail controls ---------- */
 .marks{display:flex;align-items:center;gap:8px;flex:none}
@@ -537,6 +542,7 @@ function normalize(s){
     if(h.goal === undefined) h.goal = null;
     if(h.goalDir !== 'max') h.goalDir = 'min';
     if(!SLOT_IDS.includes(h.slot)) h.slot = 'day';
+    if(typeof h.cat !== 'string') h.cat = '';
     if(!Array.isArray(h.days) || !h.days.length) h.days = [0,1,2,3,4,5,6];
   });
   return s;
@@ -1069,6 +1075,30 @@ function bySlot(list){
   list.forEach(h=> (out[h.slot] || out.day).push(h));
   return out;
 }
+/* Split a slot's habits into category groups: named categories A–Z, uncategorized last.
+   Matching ignores case and extra spaces; card order is kept inside each group. */
+const catKey = c => (c||'').trim().replace(/\s+/g,' ').toLowerCase();
+function byCat(list){
+  const m = new Map();
+  list.forEach(h=>{
+    const k = catKey(h.cat);
+    if(!m.has(k)) m.set(k, {key:k, label:(h.cat||'').trim().replace(/\s+/g,' '), list:[]});
+    m.get(k).list.push(h);
+  });
+  return [...m.values()].sort((a,b)=> a.key==='' ? 1 : b.key==='' ? -1 : a.key.localeCompare(b.key));
+}
+/* Category sub-heads only appear once a slot has at least one named category. */
+function catGroups(list, rowFn){
+  const groups = byCat(list);
+  if(groups.length === 1 && groups[0].key === '') return list.map((h,i)=>rowFn(h,i,list.length)).join('');
+  return groups.map(g=>'<div class="cat-head">' + esc(g.label || 'Other') + '<span class="ct">' + g.list.length + '</span></div>'
+    + g.list.map((h,i)=>rowFn(h,i,g.list.length)).join('')).join('');
+}
+function allCats(){
+  const m = new Map();
+  state.habits.forEach(h=>{ const k = catKey(h.cat); if(k && !m.has(k)) m.set(k, h.cat.trim().replace(/\s+/g,' ')); });
+  return [...m.values()].sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
+}
 
 function setNote(k,text){
   if(text && text.trim()) state.notes[k] = text;
@@ -1227,7 +1257,7 @@ function renderToday(){
       const list = groups[sl.id];
       if(!list.length) return;
       html += '<div class="slot-head">' + sl.label + ' <span class="ct">' + list.length + '</span></div>'
-            + list.map(h=>todayRow(h,k)).join('');
+            + catGroups(list, h=>todayRow(h,k));
     });
   }else if(due.length){
     const sc = dayScore(t);
@@ -1455,6 +1485,7 @@ function editItem(h, i, groupLen){
     + '<div class="edit-bot">'
       + '<div class="seg">' + SLOTS.map(sl=>'<button data-act="slot" data-id="' + h.id + '" data-slot="' + sl.id
         + '" aria-pressed="' + (h.slot === sl.id) + '">' + SLOT_SHORT[sl.id] + '</button>').join('') + '</div>'
+      + '<input class="mini cat-in" list="catList" value="'+esc(h.cat||'')+'" placeholder="category" data-act="cat" data-id="'+h.id+'" aria-label="Category, e.g. Fitness">'
       + '<div class="seg"><button data-act="type" data-id="'+h.id+'" data-type="check" aria-pressed="'+(!num)+'">Tick off</button>'
       + '<button data-act="type" data-id="'+h.id+'" data-type="number" aria-pressed="'+num+'">Number</button></div>'
       + numFields
@@ -1475,10 +1506,11 @@ function renderEdit(){
     const list = groups[sl.id];
     if(!list.length) return;
     html += '<div class="slot-head">' + sl.label + ' <span class="ct">' + list.length + '</span></div>'
-      + list.map((h,i)=>editItem(h, i, list.length)).join('');
+      + catGroups(list, (h,i,n)=>editItem(h, i, n));
   });
 
   if(!live.length) html = '<div class="empty"><p>No habits on the card.<br>Add one below.</p></div>';
+  html += '<datalist id="catList">' + allCats().map(c=>'<option value="'+esc(c)+'">').join('') + '</datalist>';
 
   html += '<div class="add"><input id="newHabit" placeholder="Add a habit" aria-label="New habit name">'
         + '<button data-act="add">Add</button></div>';
@@ -1934,7 +1966,7 @@ view.addEventListener('click', e=>{
   }
   if(act==='move'){
     const step = Number(b.dataset.step);
-    const group = state.habits.filter(x=>!x.archived && x.slot===h.slot);
+    const group = state.habits.filter(x=>!x.archived && x.slot===h.slot && catKey(x.cat)===catKey(h.cat));
     const gi = group.indexOf(h), gj = gi+step;
     if(gi<0 || gj<0 || gj>=group.length) return;
     const other = group[gj];
@@ -2038,6 +2070,7 @@ view.addEventListener('input', e=>{
 
   if(act==='name'){ h.name = el.value; persist(); return; }
   if(act==='unit'){ h.unit = el.value; persist(); return; }
+  if(act==='cat'){ h.cat = el.value; persist(); return; }
   if(act==='goal'){ h.goal = el.value==='' ? null : Number(el.value); persist(); return; }
   if(act==='note'){ setNote(el.dataset.k, el.value); grow(el); return; }
   if(act==='num'){
@@ -2060,6 +2093,10 @@ view.addEventListener('change', e=>{
     toast(el.checked ? 'Auto-sync on.' : 'Auto-sync off — use Push now / Pull now.');
     return;
   }
+  if(el.dataset.act === 'cat'){
+    const h = state.habits.find(x=>x.id===el.dataset.id);
+    h.cat = el.value.trim().replace(/\s+/g,' '); persist(); render(); return;
+  }
   if(el.dataset.act === 'goalDir'){
     const h = state.habits.find(x=>x.id===el.dataset.id);
     if(el.value === 'none'){ h.goal = null; }
@@ -2078,7 +2115,7 @@ view.addEventListener('keydown', e=>{
   if(e.target.id === 'newHabit'){ addHabit(e.target.value); focusNext='newHabit'; }
   else if(e.target.id === 'quickAdd'){ addHabit(e.target.value); }
   else if(e.target.id === 'edNum'){ document.querySelector('[data-act="saveNum"]').click(); }
-  else if(e.target.classList.contains('name-in') || e.target.dataset.act === 'num'){ e.target.blur(); }
+  else if(e.target.classList.contains('name-in') || e.target.dataset.act === 'num' || e.target.dataset.act === 'cat'){ e.target.blur(); }
 });
 
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && !editing) render(); });
