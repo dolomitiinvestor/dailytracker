@@ -142,11 +142,12 @@ input[type=number]{-moz-appearance:textfield}
   width:84px;height:42px;text-align:center;border-radius:3px;
   font-family:'DM Mono',monospace;font-size:15.5px;
   background:rgba(0,0,0,.28);border:1.5px dashed var(--rule-2);
+  color:var(--ink);-webkit-text-fill-color:var(--ink);caret-color:var(--ink);
 }
 .field::placeholder{color:var(--ink-3);font-size:13px}
 .field:focus{outline:0;border-style:solid;border-color:var(--hi);background:rgba(0,0,0,.42)}
 .field.met{
-  color:var(--stock-2);background:var(--desk);border:0;
+  color:var(--ink);background:var(--desk);border:0;
   box-shadow:inset 0 3px 5px rgba(0,0,0,.95), 0 0 0 2.5px var(--hi), 0 1px 0 rgba(255,255,255,.4);
 }
 .unit{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:center;line-height:1.2}
