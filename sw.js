@@ -1,5 +1,5 @@
 /* Daily Card service worker — offline shell only. Your data never passes through here. */
-const V = 'daily-card-v14';
+const V = 'daily-card-v15';
 const CORE = ['./', './index.html', './manifest.webmanifest',
               './icon-192.png?v=3', './icon-512.png?v=3', './icon-maskable.png?v=3', './apple-touch-icon.png?v=3'];
 
@@ -19,6 +19,11 @@ self.addEventListener('activate', e=>{
 self.addEventListener('fetch', e=>{
   const url = new URL(e.request.url);
   if(e.request.method !== 'GET' || BYPASS.includes(url.hostname)) return;
+  /* Only the app's own files and fonts are cached. Everything else
+     cross-origin (the Goodreads relays) must always hit the network, or
+     Refresh keeps replaying the first feed it ever saw. */
+  const FONTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+  if(url.origin !== self.location.origin && !FONTS.includes(url.hostname)) return;
 
   /* Always check the network first for the app shell itself, so a new
      deploy shows up the next time the app is opened. Cache is only the
